@@ -1,0 +1,461 @@
+import os, glob, random
+import torch
+import numpy as np
+import pandas as pd
+
+from torch_geometric.data import Data, InMemoryDataset
+from torch_geometric.loader import DataLoader
+from torch_geometric.utils import to_networkx
+
+from sklearn.model_selection import train_test_split, KFold
+
+from polymerlearn.utils.xyz2mol import int_atom, xyz2mol
+
+#def read_xyz_file(filename, look_for_charge=True):
+def read_xyz_file_top_conformer(filename, look_for_charge=True):
+    """
+    Reads an xyz file and parses the first conformer at the top
+    """
+
+    atomic_symbols = []
+    xyz_coordinates = []
+    charge = 0
+    title = ""
+
+    all_atoms_charge_xyz = []
+
+    with open(filename, "r") as file:
+
+        for line_number, line in enumerate(file):
+            #print(line)
+            if line_number == 0:
+                num_atoms = int(line)
+            elif line_number == 1:
+                title = line
+                if "charge=" in line:
+                    charge = int(line.split("=")[1])
+            elif line_number >= num_atoms + 2:
+                break # Break after first conformation
+            else:
+                atomic_symbol, x, y, z = line.split()
+                atomic_symbols.append(atomic_symbol)
+                xyz_coordinates.append([float(x), float(y), float(z)])
+
+    atoms = [int_atom(atom) for atom in atomic_symbols]
+
+    return atoms, charge, xyz_coordinates
+
+def convert_xyz_to_mol(filename):
+    atoms, charge, xyz_coordinates = read_xyz_file_top_conformer(filename)
+
+    mols = xyz2mol(
+            atoms, 
+            xyz_coordinates,
+            charge = charge,
+            use_graph=True,
+            allow_charged_fragments=True,
+            embed_chiral=False,
+            use_huckel=False)
+
+    return mols[0]
+
+# Citation (C) = https://towardsdatascience.com/practical-graph-neural-networks-for-molecular-machine-learning-5e6dee7dc003
+def get_atom_features(mol):
+    '''
+    Make atom features
+        - Can be made more robust with background work
+    '''
+    # Cite: C
+    #atomic_number = []
+    #charges = []
+    features = []
+    #num_hs = []
+    
+    for atom in mol.GetAtoms():
+        #atomic_number.append(atom.GetAtomicNum())
+        charge = atom.GetFormalCharge()
+        degree = atom.GetDegree()
+        mass = atom.GetMass()
+        is_aromatic = atom.GetIsAromatic()
+        anum = atom.GetAtomicNum()
+        explicit_hs = atom.GetNumExplicitHs()
+        num_valence = atom.GetTotalValence()
+        num_rad_electrons = atom.GetNumRadicalElectrons()
+
+        #features.append([charge, degree, mass, is_aromatic, anum, explicit_hs, num_rad_electrons])
+        features.append([charge, degree, mass, is_aromatic, explicit_hs, num_valence])
+        #num_hs.append(atom.GetTotalNumHs(includeNeighbors=True))
+        
+    return torch.tensor(features).float()
+
+def get_edge_index(mol, get_edge_attr = False):
+    '''
+    Gets edge index for a molecule
+    '''
+    # Cite: C
+    row, col = [], []
+    edge_attr = []
+
+    for bond in mol.GetBonds():
+        start, end = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
+        row += [start, end]
+        col += [end, start]
+
+        if get_edge_attr:
+            btype = bond.GetBondTypeAsDouble()
+            inring = int(bond.IsInRing())
+            edge_attr.append([btype, inring])
+
+    eidx = torch.tensor([row, col], dtype=torch.long)
+
+    if get_edge_attr:
+        edge_attr = torch.tensor(edge_attr).float()
+        return eidx, edge_attr
+        
+    return eidx
+
+def prepare_dataloader_graph_AG(A_mol_list, G_mol_list, Y = None, add_A = None, add_G = None, get_edge_attr = False):
+    '''
+    Prepares a dataloader given a list of molecules
+
+    Args:
+        A_mol_list (list of lists): List of lists of RDKit Mol objects for each sample.
+            Should look something like:
+                [[A_11, A_12], [A_21, A_22, A_23, A_24], ..., [A_n1]]
+        G_mol_list (list of lists): Same as A_mol_list but for Glycols
+        Y (iterable, optional): Y (ground truth values) for each sample
+        add_A (dict of lists, optional): Dictionary of lists of values to add for each acid. 
+            Should be keyed on strings of names of variables with list values 
+            corresponding to numerical values to add to the Data objects in the
+            DataLoader.
+        add_G (dict of lists, optional): Same as add_A but for glycols.
+    '''
+
+    assert len(A_mol_list) == len(G_mol_list), 'A and G mol (RDKit) lists not same length'
+
+    # Cite: C
+    data_list = []
+
+    i = 0 # Counts total Amols, Gmols that we've added (i.e. whole samples)
+
+    for Amols, Gmols in zip(A_mol_list, G_mol_list):
+
+        acid_graphs = []
+        j = 0 # Counts total number of acids for this sample
+        for Amol in Amols:
+            Ax = get_atom_features(Amol)
+            if get_edge_attr:
+                Aedge_index, Aedge_attr = get_edge_index(Amol, get_edge_attr=True)
+            else:
+                Aedge_index = get_edge_index(Amol)
+
+            # Support for additional arguments:
+            add_args = {}
+            if add_A is not None:
+                for key, val in add_A.items():
+                    add_args[key] = torch.tensor([val[i][j]]).float()
+
+            if Y is not None:
+                add_args['y'] = Y[i]
+            if get_edge_attr:
+                add_args['edge_attr'] = Aedge_attr
+
+            acid_data = Data(x=Ax, edge_index = Aedge_index, **add_args)
+            acid_graphs.append(acid_data)
+            j += 1
+
+
+        glycol_graphs = []
+        j = 0 # Counts total number of glycols for this sample
+        for Gmol in Gmols:
+            Gx = get_atom_features(Gmol)
+
+            if get_edge_attr:
+                Gedge_index, Gedge_attr = get_edge_index(Gmol, get_edge_attr=True)
+            else:
+                Gedge_index = get_edge_index(Gmol)
+
+            add_args = {}
+            if add_A is not None:
+                for key, val in add_G.items():
+                    add_args[key] = torch.tensor([val[i][j]]).float()
+
+            # Support for adding multiple
+            if Y is not None:
+                add_args['y'] = Y[i]
+            if get_edge_attr:
+                add_args['edge_attr'] = Gedge_attr
+
+            glycol_data = Data(x=Gx, edge_index=Gedge_index, **add_args)
+            glycol_graphs.append(glycol_data)
+            j += 1
+
+        data_list.append((acid_graphs, glycol_graphs))
+
+        i += 1
+
+    return data_list
+
+def list_mask(L, mask):
+    '''
+    Transform a list with a boolean mask
+    Args:
+        L (list): List to be masked
+        mask (iterable): Mask to apply on list L
+    '''
+    return [L[int(i)] for i in range(len(mask)) if mask[i]]
+
+# base_structure_dir = os.path.join('/home/sai/Eastman_Project',
+#     'ReadyToEnsemble',
+#     'Structures',
+#     'AG',
+#     'xyz')
+base_structure_dir = os.path.join('..',
+    'ReadyToEnsemble',
+    'Structures',
+    'AG',
+    'xyz')
+
+class GraphDataset:
+    '''
+    Generates a graph dataset based on input from Eastman data
+
+    Args:
+        data (pd.DataFrame): DataFrame containing Eastman data format.
+        Y_target (pd.DataFrame): Target values to predict with the dataset.
+        structure_dir (str, optional): Location of base structures, i.e. xyz files.
+            Assumes that all xyz files are named exactly like the molecules in the
+            input data given from Eastman.
+        add_features (np.array or torch.Tensor): Additional features to be added to
+            each sample's final embedding before processing. These are GLOBAL features
+            and are not per-atom features (TODO: make per-atom features).
+        ac (tuple, len 2): Bottom and top bounds for all acids on the table given as
+            data. Must be column indices. 
+        gc (tuple, len 2): Bottom and top bounds for all glycols on the table given as
+            data. Must be column indices. 
+        test_size (float): Proportion of data to be used as testing data (if using 
+            train/test split).
+        bound_filter (list, length 2): Filters the dataset by some bound on Y value, 
+            i.e. controls for outliers
+            TODO: implementation for multiple Y values
+    '''
+
+    def __init__(self,
+            data,
+            Y_target,
+            structure_dir = base_structure_dir,
+            add_features = None,
+            per_mol_features = None,
+            ac = (20,33),
+            gc = (34,46),
+            test_size = 0.25,
+            val_size = 0.1,
+            get_edge_attr  = False,
+            bound_filter = None,
+            exclude_inds = None,
+        ):
+
+        self.add_features = add_features
+        self.get_edge_attr = get_edge_attr
+        if self.add_features is not None:
+            if self.add_features.ndim == 1:
+                self.add_features = self.add_features[:, np.newaxis] # Turn to column vector
+
+        # Decompose the data into included names
+        acid_names = pd.Series([c[1:] for c in data.columns[ac[0]:ac[1]].tolist()])
+        glycol_names = pd.Series([c[1:] for c in data.columns[gc[0]:gc[1]].tolist()])
+
+        # Holds all names of acids and glycols
+        acid_included = []
+        glycol_included = []
+
+        # Keep track of percents in each acid, glycol
+        acid_pcts = []
+        glycol_pcts = []
+
+        # Get relevant names and percentages of acid/glycols
+        for i in range(data.shape[0]):
+
+            acid_hit = (data.iloc[i,ac[0]:ac[1]].to_numpy() > 0)
+            glycol_hit = (data.iloc[i,gc[0]:gc[1]].to_numpy() > 0)
+
+            # Add to percentage lists:
+            acid_pcts.append(data.iloc[i,ac[0]:ac[1]][acid_hit].tolist())
+            glycol_pcts.append(data.iloc[i,gc[0]:gc[1]][glycol_hit].tolist()) 
+
+            acid_pos = acid_names[np.argwhere(acid_hit).flatten()].tolist()
+            glycol_pos = glycol_names[np.argwhere(glycol_hit).flatten()].tolist()
+
+            acid_included.append(acid_pos)
+            glycol_included.append(glycol_pos)
+
+        # Read all xyz files into generators, get lowest energy conformation (index 0)
+
+        self.acid_mols = []
+        self.glycol_mols = []
+
+        for i in range(len(acid_included)):
+            self.acid_mols.append(
+                [convert_xyz_to_mol(os.path.join(structure_dir, acid_included[i][j] + '.xyz')) for j in range(len(acid_included[i]))]
+            )
+
+            self.glycol_mols.append(
+                [convert_xyz_to_mol(os.path.join(structure_dir, glycol_included[i][j] + '.xyz')) for j in range(len(glycol_included[i]))]
+            )
+
+        # Set Y (target)
+        Y = data.loc[:,Y_target]
+
+        # Mask data for empty entries
+        non_nan_mask = Y.notna()
+
+        self.exclude_inds = exclude_inds
+
+        if self.exclude_inds is not None:
+            # Set up exclude-by-index mask:
+            inds_lookup = set(self.exclude_inds)
+            exclude_by_index = [not (i in inds_lookup) for i in range(Y.shape[0])]
+        else:
+            exclude_by_index = [True] * Y.shape[0]
+
+        self.bound_filter = bound_filter
+        
+        if self.bound_filter is not None:
+            non_nan_mask = non_nan_mask & (Y > bound_filter[0]) & (Y < bound_filter[1]) & exclude_by_index
+        
+        non_nan_mask['res_bool'] = False
+        non_nan_mask.loc[non_nan_mask[Y_target].all(1), 'res_bool'] = True
+
+        non_nan_mask = non_nan_mask['res_bool'].values
+        self.total_samples = sum(non_nan_mask)
+
+        # Mask acid, glycols:
+        self.acid_mols = list_mask(self.acid_mols, non_nan_mask)
+        self.glycol_mols = list_mask(self.glycol_mols, non_nan_mask)
+
+        # Mask Y:
+        self.Y = Y[non_nan_mask].values
+
+        # Mask percentages of acids and glycols:
+        self.acid_pcts = list_mask(acid_pcts, non_nan_mask)
+        self.glycol_pcts = list_mask(glycol_pcts, non_nan_mask)
+
+        # Mask additional features:
+        if self.add_features is not None: # Mask additional features, if needed
+            self.add_features = list_mask(self.add_features, non_nan_mask)
+
+        # Make dataloader
+        train_mask, test_mask = train_test_split(list(range(len(self.acid_mols))), test_size = test_size)
+
+        self.split_by_indices(train_mask=train_mask, test_mask=test_mask)
+
+    def get_train_batch(self, size):
+        '''
+        Perform manual batching of graph dataset
+        '''
+
+        # Randomly sample the training data
+        sample_inds = random.sample(list(np.arange(len(self.Ytrain))), k = size)
+
+        if self.add_features is None:
+            return [self.train_data[i] for i in sample_inds], torch.tensor([self.Ytrain[i] for i in sample_inds]).float()
+        else:
+            train_masked = [self.train_data[i] for i in sample_inds]
+            Y_masked = torch.tensor(np.array([self.Ytrain[i] for i in sample_inds])).float()
+            add_masked = [self.add_train[i] for i in sample_inds]
+            return train_masked, Y_masked, add_masked
+
+    def get_test(self, test_inds = None):
+        '''
+        Get test data nbased on the current internal split
+        '''
+        if test_inds is not None:
+            return self.test_data, torch.tensor(self.Ytest).float(), self.add_test, test_inds
+        else:
+            return self.test_data, torch.tensor(self.Ytest).float(), torch.tensor(self.add_test).float()
+
+    def Kfold_CV(self, folds):
+        '''
+        Generator that wraps SKLearn's K-fold cross validation
+
+        Note that the yield of this function is the testing data, you must perform batching
+            of the dataset object (get_train_batch) to get the training data. Rationale 
+            behind this is to allow you to train multiple epochs while repeatedly batching
+            the training data under one iteration of the Kfold_CV function. 
+
+        Yield:
+            tuple(tuple(train_data, Ytrain, add_train), tuple(test_data, Ytest, add_test))
+        '''
+
+        inds = np.arange(self.total_samples)
+        kfold = KFold(n_splits=folds, shuffle = True)
+
+        for train_inds, test_inds in kfold.split(inds):
+            self.split_by_indices(train_mask = train_inds, test_mask = test_inds)
+            self.train_inds = train_inds
+            self.test_inds = test_inds
+            yield self.get_test(test_inds)
+
+    def make_dataloader_by_mask(self, mask):
+        '''
+        Makes an internal dataloader based on current train/test masks
+        '''
+
+        # Perform all train masking: -------------------------------
+        Ymask = [self.Y[int(i)] for i in mask]
+        mask_Amols = [self.acid_mols[int(i)] for i in mask]
+        mask_Gmols = [self.glycol_mols[int(i)] for i in mask]
+
+        add_A = {'pct': [self.acid_pcts[i] for i in mask]}
+        add_G = {'pct': [self.glycol_pcts[i] for i in mask]}
+
+        data = prepare_dataloader_graph_AG(mask_Amols, mask_Gmols, Ymask,
+                        add_A = add_A, add_G = add_G)
+
+        return data
+
+
+    def split_by_indices(self, train_mask, test_mask):
+        '''
+        Resets train_data, test_data, Ytrain, and Ytest for internal use
+        Splits the data given train_mask and test_mask and stores dataloaders in
+            self.train_data and self.test_data
+        '''
+
+        self.Ytrain = [self.Y[int(i)] for i in train_mask]
+        self.Ytest = [self.Y[int(i)] for i in test_mask]
+
+        self.train_data = self.make_dataloader_by_mask(train_mask)
+        self.test_data = self.make_dataloader_by_mask(test_mask)
+
+        # Perform all test masking:  --------------------------------
+        # self.Ytest = [self.Y[int(i)] for i in test_mask]
+        # self.test_Amols = [self.acid_mols[int(i)] for i in test_mask]
+        # self.test_Gmols = [self.glycol_mols[int(i)] for i in test_mask]
+
+        # add_A = {'pct': [self.acid_pcts[i] for i in test_mask]}
+        # add_G = {'pct': [self.glycol_pcts[i] for i in test_mask]}
+        # self.test_data = prepare_dataloader_graph_AG(self.test_Amols, self.test_Gmols, self.Ytest,
+        #                 add_A = add_A, add_G = add_G)
+
+        if self.add_features is not None:
+            self.add_train = [self.add_features[int(i)] for i in train_mask]
+            self.add_test = [self.add_features[int(i)] for i in test_mask]
+
+
+def test_xyz2mol():
+    print(read_xyz_file_top_conformer(os.path.join(base_structure_dir, 'IPA.xyz')))
+
+    mol = convert_xyz_to_mol(os.path.join(base_structure_dir, 'IPA.xyz'))
+
+    print([a.GetAtomicNum() for a in mol.GetAtoms()])
+
+def test_dataset():
+
+    data = pd.read_csv(os.path.join('/Users/owenqueen/Desktop/Eastman_Project-Confidential/Eastman_Project/CombinedData', 
+            'combined_data.csv'))
+
+    dataset = GraphDataset(data = data, Y_target=['IV'])
+
+if __name__ == '__main__':
+    test_dataset()
