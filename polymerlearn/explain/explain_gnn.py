@@ -121,15 +121,34 @@ class PolymerGNNExplainer:
         # Get features in a feedforward step
         features = self.extractor(batches_tup)
 
-        ind_map = index_to_batch_mapper(batches_tup[2], ratio = self.ratio)
+        def attr_scores(key = 'A', hc = 32):
+            bind = 2 if key == 'A' else -2
+            add_to_bottom = 0 if key == 'A' else 32
+            ind_map = index_to_batch_mapper(batches_tup[bind], ratio = self.ratio)
 
-        feat_argmax = torch.argmax(features['Asage'][0], dim = 0)
+            str_key = '{}sage'.format(key)
 
-        # Expand scores backward from the max pooling:
-        scores = torch.zeros((len(set(ind_map.values())), 32))
-        for j in range(feat_argmax.shape[0]):
-            score_ind = ind_map[feat_argmax[j].item()]
-            scores[score_ind,j] = attribution[j] 
+            feat_argmax = torch.argmax(features[str_key][0], dim = 0)
+
+            # Expand scores backward from the max pooling:
+            scores = torch.zeros((len(set(ind_map.values())), 32))
+            for j in range(feat_argmax.shape[0]):
+                score_ind = ind_map[feat_argmax[j].item()]
+                scores[score_ind,j] = attribution[add_to_bottom + j] 
+
+            return scores
+
+        scores = {
+            'A': attr_scores('A'),
+            'G': attr_scores('G')
+        }
+
+        # Score individual attributes:
+        num_add = add_test.shape[0]
+
+        scores['add'] = attribution[-num_add:]
 
         return scores
+
+
 

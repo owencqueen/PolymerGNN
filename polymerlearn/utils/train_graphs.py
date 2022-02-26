@@ -110,7 +110,7 @@ def train(
         test_preds = []
         with torch.no_grad():
             for i in range(Ytest.shape[0]):
-                test_preds.append(model(*make_like_batch(test_batch[i]), torch.tensor(add_test[i]).float()).clone().detach().item())
+                test_preds.append(model(*make_like_batch(test_batch[i]), add_test[i]).clone().detach().item())
 
         r2_test = r2_score(Ytest.numpy(), test_preds)
         mse_test = mean_squared_error(Ytest.numpy(), test_preds)

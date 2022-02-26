@@ -196,6 +196,41 @@ def prepare_dataloader_graph_AG(A_mol_list, G_mol_list, Y = None, add_A = None, 
 
     return data_list
 
+def get_AG_info(data, ac = (20,33), gc = (34,46)):
+    '''
+    Gets acid/glycol info from a dataframe containing input in the Eastman fashion
+    '''
+
+    # Decompose the data into included names
+    acid_names = pd.Series([c[1:] for c in data.columns[ac[0]:ac[1]].tolist()])
+    glycol_names = pd.Series([c[1:] for c in data.columns[gc[0]:gc[1]].tolist()])
+
+    # Holds all names of acids and glycols
+    acid_included = []
+    glycol_included = []
+
+    # Keep track of percents in each acid, glycol
+    acid_pcts = []
+    glycol_pcts = []
+
+    # Get relevant names and percentages of acid/glycols
+    for i in range(data.shape[0]):
+
+        acid_hit = (data.iloc[i,ac[0]:ac[1]].to_numpy() > 0)
+        glycol_hit = (data.iloc[i,gc[0]:gc[1]].to_numpy() > 0)
+
+        # Add to percentage lists:
+        acid_pcts.append(data.iloc[i,ac[0]:ac[1]][acid_hit].tolist())
+        glycol_pcts.append(data.iloc[i,gc[0]:gc[1]][glycol_hit].tolist()) 
+
+        acid_pos = acid_names[np.argwhere(acid_hit).flatten()].tolist()
+        glycol_pos = glycol_names[np.argwhere(glycol_hit).flatten()].tolist()
+
+        acid_included.append(acid_pos)
+        glycol_included.append(glycol_pos)
+
+    return acid_included, glycol_included, acid_pcts, glycol_pcts
+
 def list_mask(L, mask):
     '''
     Transform a list with a boolean mask
@@ -211,7 +246,6 @@ def list_mask(L, mask):
 #     'AG',
 #     'xyz')
 base_structure_dir = os.path.join('..',
-    'ReadyToEnsemble',
     'Structures',
     'AG',
     'xyz')
@@ -421,6 +455,9 @@ class GraphDataset:
         Splits the data given train_mask and test_mask and stores dataloaders in
             self.train_data and self.test_data
         '''
+
+        self.train_mask = train_mask
+        self.test_mask = test_mask
 
         self.Ytrain = [self.Y[int(i)] for i in train_mask]
         self.Ytest = [self.Y[int(i)] for i in test_mask]
