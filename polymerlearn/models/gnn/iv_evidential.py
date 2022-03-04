@@ -2,9 +2,9 @@ import torch
 from torch_geometric.nn import SAGEConv, GATConv, Sequential, BatchNorm
 from torch_geometric.nn import SAGPooling
 
-class PolymerGNN_IV(torch.nn.Module):
+class PolymerGNN_IV_evidential(torch.nn.Module):
     def __init__(self, input_feat, hidden_channels, num_additional = 0):
-        super(PolymerGNN_IV, self).__init__()
+        super(PolymerGNN_IV_evidential, self).__init__()
         self.hidden_channels = hidden_channels
 
         self.Asage = Sequential('x, edge_index, batch', [
