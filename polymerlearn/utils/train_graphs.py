@@ -73,6 +73,25 @@ def make_like_batch(batch: tuple):
 
     return Abatch, Gbatch 
 
+def check_early_stop(loss_list, delay = 100):
+    '''
+    Checks early stopping criterion for training procedure
+    Check max, see if <delay> epochs have passed since the max
+    '''
+
+    largest = np.argmin(loss_list)
+
+    # Can enforce some smoothness condition:
+    low = max(largest - 5, 0)
+    up = largest + 6
+
+    # Check if the difference between average around it and itself is different enough
+    minloss = loss_list[largest]
+    around_min = np.concatenate([loss_list[low:largest], loss_list[(largest+1):up]])
+    smooth = np.abs(np.mean(around_min) - minloss) < np.abs(minloss * 0.25)
+
+    return ((len(loss_list) - largest) > delay) and smooth
+
 def train(
         model, 
         optimizer, 
@@ -128,7 +147,21 @@ def CV_eval(
         optimizer_kwargs: dict = {},
         batch_size = 64,
         verbose = 1,
-        epochs = 1000):
+        epochs = 1000,
+        val_size = 0.1,
+        stop_option = 0,
+        early_stop_delay = 100):
+    '''
+    
+    Args:
+        stop_option (int): Option that specifies which method to use for early
+            stopping/validation saving. 0 simply performs all epochs for each fold.
+            1 performs all epochs but uses model with highest validation score for 
+            evaluation on test set. 2 stops early if the validation loss was at least
+            `early_stop_delay` epochs ago; it loads that trial's model and evaluates
+            on it.
+    
+    '''
 
     num_folds = 5
     fold_count = 0
@@ -141,22 +174,24 @@ def CV_eval(
     all_y = []
     all_reference_inds = []
 
-    for test_batch, Ytest, add_test, test_inds in dataset.Kfold_CV(folds = num_folds):
+    for test_batch, Ytest, add_test, test_inds in \
+            dataset.Kfold_CV(folds = num_folds, val = True, val_size = val_size):
 
-        #model = GNNSophPool(7, 32, num_additional=4)
+        # Instantiate fold-level model and optimizer:
         model = model_generator(**model_generator_kwargs)
-
         optimizer = optimizer_generator(model.parameters(), **optimizer_kwargs)
 
         fold_count += 1
-        #Ytest = np.log(Ytest) # Log transform Ytest
+        loss_list = []
+
+        if stop_option >= 1:
+            min_val_loss = 1e10
+            min_val_state_dict = None
 
         for e in range(epochs):
             
             # Bootstrap batches:
             batch, Y, add_features = dataset.get_train_batch(size = batch_size)
-
-            #Y = np.log(Y) # Log transform Y
 
             train_predictions = []
             cum_loss = 0
@@ -174,8 +209,42 @@ def CV_eval(
                 cum_loss += loss.item()
                 optimizer.step()
 
+            # Test on validation:
+            model.eval()
+            val_batch, Yval, add_feat_val = dataset.get_validation()
+            cum_val_loss = 0
+            val_preds = []
+            with torch.no_grad():
+                for i in range(Yval.shape[0]):
+                    pred = model(*make_like_batch(val_batch[i]), add_feat_val[i])
+                    val_preds.append(pred.item())
+                    cum_val_loss += criterion(pred, Yval[i]).item()
+                
+            loss_list.append(cum_val_loss)
+            model.train() # Must switch back to train after eval
+
             if e % 50 == 0 and (verbose == 1):
-                print(f'Fold: {fold_count} \t Epoch: {e}, \t Train r2: {r2_score(Y, train_predictions):.4f} \t Train Loss: {cum_loss:.4f}')
+                print(f'Fold: {fold_count} \t Epoch: {e}, \
+                    \t Train r2: {r2_score(Y, train_predictions):.4f} \t Train Loss: {cum_loss:.4f} \
+                    Val r2: {r2_score(Yval, val_preds):.4f} \t Val Loss: {cum_val_loss:.4f}')
+
+            if stop_option >= 1:
+                if cum_val_loss < min_val_loss:
+                    # If min val loss, store state dict
+                    min_val_loss = cum_val_loss
+                    min_val_state_dict = model.state_dict()
+
+            # Check early stop if needed:
+            if stop_option == 2:
+                # Check criteria:
+                if check_early_stop(loss_list, early_stop_delay) and e > early_stop_delay:
+                    break
+
+        
+        if stop_option >= 1: # Loads the min val loss state dict even if we didn't break
+            # Load in the model with min val loss
+            model = model_generator(**model_generator_kwargs)
+            model.load_state_dict(min_val_state_dict)
 
         # Test:
         test_preds = []

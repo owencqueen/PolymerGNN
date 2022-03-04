@@ -240,6 +240,14 @@ def list_mask(L, mask):
     '''
     return [L[int(i)] for i in range(len(mask)) if mask[i]]
 
+def split_validation(train_mask, val_num):
+
+    train_mask, val_mask = train_test_split(train_mask, test_size=val_num)
+
+    return train_mask, val_mask
+
+
+
 # base_structure_dir = os.path.join('/home/sai/Eastman_Project',
 #     'ReadyToEnsemble',
 #     'Structures',
@@ -283,7 +291,7 @@ class GraphDataset:
             ac = (20,33),
             gc = (34,46),
             test_size = 0.25,
-            val_size = 0.1,
+            val_size = None,
             get_edge_attr  = False,
             bound_filter = None,
             exclude_inds = None,
@@ -291,6 +299,8 @@ class GraphDataset:
 
         self.add_features = add_features
         self.get_edge_attr = get_edge_attr
+        self.val_size = val_size
+        self.test_size = test_size
         if self.add_features is not None:
             if self.add_features.ndim == 1:
                 self.add_features = self.add_features[:, np.newaxis] # Turn to column vector
@@ -379,9 +389,17 @@ class GraphDataset:
             self.add_features = list_mask(self.add_features, non_nan_mask)
 
         # Make dataloader
-        train_mask, test_mask = train_test_split(list(range(len(self.acid_mols))), test_size = test_size)
+        rangeL = list(range(len(self.acid_mols)))
+        train_mask, test_mask = train_test_split(rangeL, test_size = test_size)
 
-        self.split_by_indices(train_mask=train_mask, test_mask=test_mask)
+        # Support validation splitting:
+        if self.val_size is not None:
+            adj_valsize = (self.val_size) / (self.val_size + (1 - self.test_size))
+            train_mask, val_mask = train_test_split(train_mask, test_size = adj_valsize)
+        else:
+            val_mask = None
+
+        self.split_by_indices(train_mask=train_mask, test_mask=test_mask, val_mask=val_mask)
 
     def get_train_batch(self, size):
         '''
@@ -408,7 +426,16 @@ class GraphDataset:
         else:
             return self.test_data, torch.tensor(self.Ytest).float(), torch.tensor(self.add_test).float()
 
-    def Kfold_CV(self, folds):
+    def get_validation(self):
+        '''
+        Get the validation data based on current internal splits
+        '''
+        if self.val_data is None: # No validation split present
+            return None
+        else:
+            return self.val_data, torch.tensor(self.Yval).float(), torch.tensor(self.add_val).float()
+
+    def Kfold_CV(self, folds, val = False, val_size = None):
         '''
         Generator that wraps SKLearn's K-fold cross validation
 
@@ -416,6 +443,10 @@ class GraphDataset:
             of the dataset object (get_train_batch) to get the training data. Rationale 
             behind this is to allow you to train multiple epochs while repeatedly batching
             the training data under one iteration of the Kfold_CV function. 
+        
+        Args:
+            val_size (float, 0<=x<=1): Proportion of whole dataset that is used for
+                validation split on each fold.
 
         Yield:
             tuple(tuple(train_data, Ytrain, add_train), tuple(test_data, Ytest, add_test))
@@ -425,7 +456,16 @@ class GraphDataset:
         kfold = KFold(n_splits=folds, shuffle = True)
 
         for train_inds, test_inds in kfold.split(inds):
-            self.split_by_indices(train_mask = train_inds, test_mask = test_inds)
+            if val: # Split the validation:
+                val_size = val_size if val_size is not None else self.val_size
+                val_adj = val_size / (val_size + (len(train_inds) / len(test_inds)))
+                train_inds, val_inds = train_test_split(train_inds, test_size = val_adj)
+                self.val_inds = val_inds # No set if val is not true
+            else:
+                val_inds = None
+
+            self.split_by_indices(train_mask = train_inds, test_mask = test_inds, 
+                val_mask = val_inds)
             self.train_inds = train_inds
             self.test_inds = test_inds
             yield self.get_test(test_inds)
@@ -449,7 +489,7 @@ class GraphDataset:
         return data
 
 
-    def split_by_indices(self, train_mask, test_mask):
+    def split_by_indices(self, train_mask, test_mask, val_mask = None):
         '''
         Resets train_data, test_data, Ytrain, and Ytest for internal use
         Splits the data given train_mask and test_mask and stores dataloaders in
@@ -458,12 +498,19 @@ class GraphDataset:
 
         self.train_mask = train_mask
         self.test_mask = test_mask
+        self.val_mask = val_mask
 
         self.Ytrain = [self.Y[int(i)] for i in train_mask]
         self.Ytest = [self.Y[int(i)] for i in test_mask]
 
         self.train_data = self.make_dataloader_by_mask(train_mask)
         self.test_data = self.make_dataloader_by_mask(test_mask)
+
+        if self.val_mask is not None:
+            self.Yval = [self.Y[int(i)] for i in val_mask]
+            self.val_data = self.make_dataloader_by_mask(val_mask)
+        else:
+            self.val_data = None
 
         # Perform all test masking:  --------------------------------
         # self.Ytest = [self.Y[int(i)] for i in test_mask]
@@ -478,6 +525,8 @@ class GraphDataset:
         if self.add_features is not None:
             self.add_train = [self.add_features[int(i)] for i in train_mask]
             self.add_test = [self.add_features[int(i)] for i in test_mask]
+            if self.val_mask is not None:
+                self.add_val = [self.add_features[int(i)] for i in val_mask]
 
 
 def test_xyz2mol():
