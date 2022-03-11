@@ -306,8 +306,8 @@ class GraphDataset:
                 self.add_features = self.add_features[:, np.newaxis] # Turn to column vector
 
         # Decompose the data into included names
-        acid_names = pd.Series([c[1:] for c in data.columns[ac[0]:ac[1]].tolist()])
-        glycol_names = pd.Series([c[1:] for c in data.columns[gc[0]:gc[1]].tolist()])
+        self.acid_names = pd.Series([c[1:] for c in data.columns[ac[0]:ac[1]].tolist()])
+        self.glycol_names = pd.Series([c[1:] for c in data.columns[gc[0]:gc[1]].tolist()])
 
         # Holds all names of acids and glycols
         acid_included = []
@@ -327,8 +327,8 @@ class GraphDataset:
             acid_pcts.append(data.iloc[i,ac[0]:ac[1]][acid_hit].tolist())
             glycol_pcts.append(data.iloc[i,gc[0]:gc[1]][glycol_hit].tolist()) 
 
-            acid_pos = acid_names[np.argwhere(acid_hit).flatten()].tolist()
-            glycol_pos = glycol_names[np.argwhere(glycol_hit).flatten()].tolist()
+            acid_pos = self.acid_names[np.argwhere(acid_hit).flatten()].tolist()
+            glycol_pos = self.glycol_names[np.argwhere(glycol_hit).flatten()].tolist()
 
             acid_included.append(acid_pos)
             glycol_included.append(glycol_pos)
@@ -380,6 +380,9 @@ class GraphDataset:
         # Mask Y:
         self.Y = Y[non_nan_mask].values
 
+        # Mask data:
+        self.data = data.loc[non_nan_mask,:]
+
         # Mask percentages of acids and glycols:
         self.acid_pcts = list_mask(acid_pcts, non_nan_mask)
         self.glycol_pcts = list_mask(glycol_pcts, non_nan_mask)
@@ -422,9 +425,9 @@ class GraphDataset:
         Get test data nbased on the current internal split
         '''
         if test_inds is not None:
-            return self.test_data, torch.tensor(self.Ytest).float(), self.add_test, test_inds
+            return self.test_data, torch.tensor(np.array(self.Ytest)).float(), self.add_test, test_inds
         else:
-            return self.test_data, torch.tensor(self.Ytest).float(), torch.tensor(self.add_test).float()
+            return self.test_data, torch.tensor(np.array(self.Ytest)).float(), torch.tensor(self.add_test).float()
 
     def get_validation(self):
         '''

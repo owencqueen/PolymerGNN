@@ -55,7 +55,13 @@ def get_IV_add(data):
     return add
 
 def get_Tg_add(data):
-    pass
+    mw_vector = get_vector(data, prop = 'Mw (PS)', use_log = True).to_numpy()
+
+    add = np.stack([mw_vector]).T
+
+    return add
+
+
 
 def make_like_batch(batch: tuple):
     '''
@@ -148,9 +154,11 @@ def CV_eval(
         batch_size = 64,
         verbose = 1,
         epochs = 1000,
+        use_val = False,
         val_size = 0.1,
         stop_option = 0,
-        early_stop_delay = 100):
+        early_stop_delay = 100,
+        save_state_dicts = False):
     '''
     
     Args:
@@ -173,6 +181,8 @@ def CV_eval(
     all_predictions = []
     all_y = []
     all_reference_inds = []
+
+    model_state_dicts = []
 
     for test_batch, Ytest, add_test, test_inds in \
             dataset.Kfold_CV(folds = num_folds, val = True, val_size = val_size):
@@ -210,23 +220,26 @@ def CV_eval(
                 optimizer.step()
 
             # Test on validation:
-            model.eval()
-            val_batch, Yval, add_feat_val = dataset.get_validation()
-            cum_val_loss = 0
-            val_preds = []
-            with torch.no_grad():
-                for i in range(Yval.shape[0]):
-                    pred = model(*make_like_batch(val_batch[i]), add_feat_val[i])
-                    val_preds.append(pred.item())
-                    cum_val_loss += criterion(pred, Yval[i]).item()
-                
-            loss_list.append(cum_val_loss)
-            model.train() # Must switch back to train after eval
+            if use_val:
+                model.eval()
+                val_batch, Yval, add_feat_val = dataset.get_validation()
+                cum_val_loss = 0
+                val_preds = []
+                with torch.no_grad():
+                    for i in range(Yval.shape[0]):
+                        pred = model(*make_like_batch(val_batch[i]), add_feat_val[i])
+                        val_preds.append(pred.item())
+                        cum_val_loss += criterion(pred, Yval[i]).item()
+                    
+                loss_list.append(cum_val_loss)
+                model.train() # Must switch back to train after eval
 
             if e % 50 == 0 and (verbose == 1):
-                print(f'Fold: {fold_count} \t Epoch: {e}, \
-                    \t Train r2: {r2_score(Y, train_predictions):.4f} \t Train Loss: {cum_loss:.4f} \
-                    Val r2: {r2_score(Yval, val_preds):.4f} \t Val Loss: {cum_val_loss:.4f}')
+                print_str = f'Fold: {fold_count} \t Epoch: {e}, \
+                    \t Train r2: {r2_score(Y, train_predictions):.4f} \t Train Loss: {cum_loss:.4f}' 
+                if use_val:
+                   print_str += f'Val r2: {r2_score(Yval, val_preds):.4f} \t Val Loss: {cum_val_loss:.4f}'
+                print(print_str)
 
             if stop_option >= 1:
                 if cum_val_loss < min_val_loss:
@@ -266,9 +279,16 @@ def CV_eval(
         mse_test_per_fold.append(mse_test)
         mae_test_per_fold.append(mae_test)
 
+        if save_state_dicts:
+            model_state_dicts.append(model.state_dict())
+
+
     print('Final avg. r2: ', np.mean(r2_test_per_fold))
     print('Final avg. MSE:', np.mean(mse_test_per_fold))
     print('Final avg. MAE:', np.mean(mae_test_per_fold))
+
+    if save_state_dicts:
+        return all_predictions, all_y, all_reference_inds, model_state_dicts
 
     return all_predictions, all_y, all_reference_inds
 

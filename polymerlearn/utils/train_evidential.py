@@ -140,8 +140,8 @@ def CV_eval_evidential(
         test_preds = []
         with torch.no_grad():
             for i in range(Ytest.shape[0]):
-                pred = model(*make_like_batch(test_batch[i]), torch.tensor(add_test[i]).float())['gamma'].clone().detach().item()
-                test_preds.append(pred)
+                pred = model(*make_like_batch(test_batch[i]), torch.tensor(add_test[i]).float())
+                test_preds.append(pred['gamma'].clone().detach().item())
                 all_predictions.append(pred)
                 all_y.append(Ytest[i].item())
                 all_reference_inds.append(test_inds[i])

@@ -5,6 +5,7 @@ import torch
 import torch_geometric
 from typing import Dict, Iterable, Callable, Tuple
 from polymerlearn.utils import make_like_batch
+from polymerlearn.utils.graph_prep import get_AG_info
 from polymerlearn.explain.custom_gcam import LayerGradCam
 
 # Source: https://medium.com/the-dl/how-to-use-pytorch-hooks-5041d777f904
@@ -79,6 +80,8 @@ def index_to_batch_mapper(batch, ratio = 0.5):
 
     return ind_map
 
+dim1_sum = lambda t: torch.sum(t, dim=1)
+dim1_L1norm = lambda t: torch.norm(t, p=1, dim=1)
 
 class PolymerGNNExplainer:
     '''
@@ -96,9 +99,10 @@ class PolymerGNNExplainer:
         self.gcam  = LayerGradCam(model, getattr(model, explain_layer))
         self.extractor = FeatureExtractor(model)
 
-    def get_explanation(self, 
+    def get_attribution(self, 
             batch: Tuple,
-            add_test: torch.Tensor):
+            add_test: torch.Tensor,
+            mol_rep_agg = dim1_sum):
         '''
         Get explaination for a given sample from the dataset on the model.
 
@@ -110,6 +114,9 @@ class PolymerGNNExplainer:
         # Parse the batches for captum usage
         batches_tup = parse_batches(batch, add_test)
         input_tup = tuple([batches_tup[j] for j in range(1, len(batches_tup))])
+
+        if mol_rep_agg is None:
+            mol_rep_agg = lambda x: x
 
         # Compute the attribution from captum
         attribution = self.gcam.attribute(
@@ -139,16 +146,65 @@ class PolymerGNNExplainer:
             return scores
 
         scores = {
-            'A': attr_scores('A'),
-            'G': attr_scores('G')
+            'A': mol_rep_agg(attr_scores('A')).detach().clone(),
+            'G': mol_rep_agg(attr_scores('G')).detach().clone()
         }
 
         # Score individual attributes:
         num_add = add_test.shape[0]
 
-        scores['add'] = attribution[-num_add:]
+        scores['add'] = attribution[-num_add:].detach().clone()
 
         return scores
+
+    def get_testing_explanation(self,
+            dataset,
+            add_data_keys = ['Mw', 'AN', 'OHN', '%TMP']):
+        '''
+        
+        Args:
+            dataset
+            add_data_keys (list of str): List that should have the same
+                length as additional 
+        '''
+
+        test_batch, Ytest, add_test = dataset.get_test()
+        test_inds = dataset.test_mask
+
+        exp_summary = []
+
+        # Summary tools for acid/glycol scores
+        acid_key = {a:[] for a in dataset.acid_names}
+        glycol_key = {g:[] for g in dataset.glycol_names}
+        additional_key = {a:[] for a in add_data_keys}
+        acids, glycols, _, _ = get_AG_info(dataset.data)
+
+        for i in range(Ytest.shape[0]):
+            scores = self.get_attribution(test_batch[i], add_test[i], mol_rep_agg=dim1_L1norm)
+            Ti = test_inds[i]
+            scores['table_ind'] = Ti
+
+            print(scores)
+            print(acids[Ti])
+            print(glycols[Ti])
+
+            for a in range(len(acids[Ti])):
+                Ascore = scores['A'].item() if len(acids[Ti]) == 1 else scores['A'][a].item()
+                acid_key[acids[Ti][a]].append(Ascore)
+            
+            for g in range(len(glycols[Ti])):
+                Gscore = scores['G'].item() if len(glycols[Ti]) == 1 else scores['G'][g].item()
+                glycol_key[glycols[Ti][g]].append(Gscore)
+
+            # Assign attributions to additional elements:
+            for j in range(len(add_data_keys)):
+                v = scores['add'][j - len(add_data_keys)].item()
+                scores[add_data_keys[j]] = v
+                additional_key[add_data_keys[j]].append(v)
+
+            exp_summary.append(scores)
+
+        return exp_summary, acid_key, glycol_key, additional_key
 
 
 
