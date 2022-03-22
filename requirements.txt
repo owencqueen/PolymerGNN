@@ -1,9 +1,7 @@
-numpy
-pandas
-torch_geometric
-torch
-captum
-sklearn
-rdkit-pypi
-networkx
-tqdm
+numpy==1.19.5
+pandas==1.1.3
+torch==1.10.2
+captum==0.4.1
+sklearn==0.0
+networkx==2.5
+tqdm==4.50.2

@@ -66,10 +66,7 @@ def get_atom_features(mol):
         - Can be made more robust with background work
     '''
     # Cite: C
-    #atomic_number = []
-    #charges = []
     features = []
-    #num_hs = []
     
     for atom in mol.GetAtoms():
         #atomic_number.append(atom.GetAtomicNum())
@@ -114,7 +111,14 @@ def get_edge_index(mol, get_edge_attr = False):
         
     return eidx
 
-def prepare_dataloader_graph_AG(A_mol_list, G_mol_list, Y = None, add_A = None, add_G = None, get_edge_attr = False):
+def prepare_dataloader_graph_AG(
+        A_mol_list, 
+        G_mol_list, 
+        Y = None, 
+        add_A = None, 
+        add_G = None, 
+        get_edge_attr = False,
+        device = None):
     '''
     Prepares a dataloader given a list of molecules
 
@@ -153,14 +157,18 @@ def prepare_dataloader_graph_AG(A_mol_list, G_mol_list, Y = None, add_A = None, 
             add_args = {}
             if add_A is not None:
                 for key, val in add_A.items():
-                    add_args[key] = torch.tensor([val[i][j]]).float()
+                    add_args[key] = torch.tensor([val[i][j]]).float().to(device)
 
             if Y is not None:
-                add_args['y'] = Y[i]
+                add_args['y'] = torch.tensor(Y[i]).float().to(device)
             if get_edge_attr:
-                add_args['edge_attr'] = Aedge_attr
+                add_args['edge_attr'] = Aedge_attr.to(device)
 
-            acid_data = Data(x=Ax, edge_index = Aedge_index, **add_args)
+            acid_data = Data(
+                x=Ax.to(device), 
+                edge_index = Aedge_index.to(device), 
+                **add_args)
+            # All acid data should be in device
             acid_graphs.append(acid_data)
             j += 1
 
@@ -182,11 +190,15 @@ def prepare_dataloader_graph_AG(A_mol_list, G_mol_list, Y = None, add_A = None, 
 
             # Support for adding multiple
             if Y is not None:
-                add_args['y'] = Y[i]
+                add_args['y'] = torch.tensor(Y[i]).float().to(device)
             if get_edge_attr:
-                add_args['edge_attr'] = Gedge_attr
+                add_args['edge_attr'] = Gedge_attr.to(device)
 
-            glycol_data = Data(x=Gx, edge_index=Gedge_index, **add_args)
+            glycol_data = Data(
+                x=Gx.to(device), 
+                edge_index=Gedge_index.to(device), 
+                **add_args)
+            # All glycol data should be in device
             glycol_graphs.append(glycol_data)
             j += 1
 
@@ -295,12 +307,14 @@ class GraphDataset:
             get_edge_attr  = False,
             bound_filter = None,
             exclude_inds = None,
+            device = None,
         ):
 
         self.add_features = add_features
         self.get_edge_attr = get_edge_attr
         self.val_size = val_size
         self.test_size = test_size
+        self.device = device
         if self.add_features is not None:
             if self.add_features.ndim == 1:
                 self.add_features = self.add_features[:, np.newaxis] # Turn to column vector
@@ -404,9 +418,12 @@ class GraphDataset:
 
         self.split_by_indices(train_mask=train_mask, test_mask=test_mask, val_mask=val_mask)
 
-    def get_train_batch(self, size):
+    def get_train_batch(self, size: int):
         '''
         Perform manual batching of graph dataset
+
+        Args:
+            size (int): Size of the batch to be retrieved
         '''
 
         # Randomly sample the training data
@@ -423,11 +440,20 @@ class GraphDataset:
     def get_test(self, test_inds = None):
         '''
         Get test data nbased on the current internal split
+
+        Args:
+            test_inds (any, optional): If provided, is returned with all other
+                values.
         '''
         if test_inds is not None:
-            return self.test_data, torch.tensor(np.array(self.Ytest)).float(), self.add_test, test_inds
+            return self.test_data, \
+                torch.tensor(np.array(self.Ytest)).float().to(self.device), \
+                self.add_test, \
+                test_inds
         else:
-            return self.test_data, torch.tensor(np.array(self.Ytest)).float(), torch.tensor(self.add_test).float()
+            return self.test_data, \
+                torch.tensor(np.array(self.Ytest)).float().to(self.device), \
+                torch.tensor(self.add_test).float().to(self.device)
 
     def get_validation(self):
         '''
@@ -436,7 +462,10 @@ class GraphDataset:
         if self.val_data is None: # No validation split present
             return None
         else:
-            return self.val_data, torch.tensor(self.Yval).float(), torch.tensor(self.add_val).float()
+            # val_data should already be on device
+            return self.val_data, \
+                torch.tensor(self.Yval).float().to(self.device), \
+                torch.tensor(self.add_val).float().to(self.device)
 
     def Kfold_CV(self, folds, val = False, val_size = None):
         '''
@@ -487,7 +516,7 @@ class GraphDataset:
         add_G = {'pct': [self.glycol_pcts[i] for i in mask]}
 
         data = prepare_dataloader_graph_AG(mask_Amols, mask_Gmols, Ymask,
-                        add_A = add_A, add_G = add_G)
+                        add_A = add_A, add_G = add_G, device = self.device)
 
         return data
 
@@ -531,7 +560,7 @@ class GraphDataset:
             if self.val_mask is not None:
                 self.add_val = [self.add_features[int(i)] for i in val_mask]
 
-
+# Misc. testing functions:
 def test_xyz2mol():
     print(read_xyz_file_top_conformer(os.path.join(base_structure_dir, 'IPA.xyz')))
 

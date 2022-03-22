@@ -1,0 +1,12 @@
+#PBS -S /bin/bash
+#PBS -A ACF-UTK0011
+#PBS -l partition=beacon
+# #PBS -l feature=beacon_gpu
+#PBS -l nodes=1:ppn=16
+#PBS -l walltime=24:00:00
+#PBS -N CV_IV
+
+cd /lustre/haven/proj/UTK0022/PolymerGNN/formal/performance
+conda activate /lustre/haven/user/oqueen/polymergnn_env
+
+python3 cv_gnn.py --num_cv 2 --IV --results_save_dir saved_scores/iv > outputs/iv/IV.out

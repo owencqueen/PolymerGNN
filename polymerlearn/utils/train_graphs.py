@@ -2,6 +2,7 @@ import os
 import torch
 import numpy as np
 import pandas as pd
+from typing import List
 
 from torch_geometric.data import Batch, Data
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
@@ -61,7 +62,22 @@ def get_Tg_add(data):
 
     return add
 
+def get_add_properties(data: pd.DataFrame, prop_names: List[str], use_log: List[bool]):
+    '''
+    Gets properties to add to the model given data, names of properties, 
+        and whether to log transform them.
+    '''
 
+    add_vectors = []
+
+    for p,l in zip(prop_names, use_log):
+        fill_value = 0 if p=='%TMP' else None
+
+        add_vectors.append(
+            get_vector(data, prop=p, use_log=l, fill_value=fill_value)
+        )
+
+    return np.stack(add_vectors).T
 
 def make_like_batch(batch: tuple):
     '''
@@ -158,7 +174,9 @@ def CV_eval(
         val_size = 0.1,
         stop_option = 0,
         early_stop_delay = 100,
-        save_state_dicts = False):
+        save_state_dicts = False,
+        get_only_scores = False,
+        device = None):
     '''
     
     Args:
@@ -168,6 +186,8 @@ def CV_eval(
             evaluation on test set. 2 stops early if the validation loss was at least
             `early_stop_delay` epochs ago; it loads that trial's model and evaluates
             on it.
+        get_only_scores (bool, optional): If True, return only the average values of metrics 
+            across the folds
     
     '''
 
@@ -188,7 +208,8 @@ def CV_eval(
             dataset.Kfold_CV(folds = num_folds, val = True, val_size = val_size):
 
         # Instantiate fold-level model and optimizer:
-        model = model_generator(**model_generator_kwargs)
+        model = model_generator(**model_generator_kwargs).to(device)
+            # Move model to GPU before setting optimizer
         optimizer = optimizer_generator(model.parameters(), **optimizer_kwargs)
 
         fold_count += 1
@@ -290,6 +311,9 @@ def CV_eval(
     if save_state_dicts:
         return all_predictions, all_y, all_reference_inds, model_state_dicts
 
+    if get_only_scores: # Return only scores
+        return np.mean(r2_test_per_fold), np.mean(mae_test_per_fold)
+
     return all_predictions, all_y, all_reference_inds
 
 def train_joint(
@@ -363,7 +387,9 @@ def CV_eval_joint(
         batch_size = 64,
         verbose = 1,
         gamma = 1e4,
-        epochs = 1000):
+        epochs = 1000,
+        get_only_scores = False,
+        device = None):
     '''
     Cross validation of the joint Tg/IV model
 
@@ -394,7 +420,7 @@ def CV_eval_joint(
 
     for test_batch, Ytest, add_test, test_inds in dataset.Kfold_CV(folds = num_folds):
 
-        model = model_generator(**model_generator_kwargs)
+        model = model_generator(**model_generator_kwargs).to(device)
         optimizer = optimizer_generator(model.parameters(), **optimizer_kwargs)
 
         fold_count += 1
@@ -483,5 +509,14 @@ def CV_eval_joint(
     print('Final avg. MAE:', np.mean(mae_test_per_fold))
     print('Final avg. MAE IV: ', np.mean(mae_test_per_fold_IV))
     print('Final avg. MAE Tg: ', np.mean(mae_test_per_fold_Tg))
+
+    if get_only_scores:
+        # Return only the r2, mae for each
+        # Return in a dictionary
+        d = {
+            'IV':(np.mean(r2_test_per_fold_IV), np.mean(mae_test_per_fold_IV)),
+            'Tg':(np.mean(r2_test_per_fold_Tg), np.mean(mae_test_per_fold_Tg))
+        }
+        return d
 
     return all_predictions, all_y, all_reference_inds
