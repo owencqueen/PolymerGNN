@@ -1,0 +1,24 @@
+#PBS -S /bin/bash
+#PBS -A ACF-UTK0011
+#PBS -l partition=beacon
+# #PBS -l feature=beacon_gpu
+#PBS -l nodes=1:ppn=16
+#PBS -l walltime=24:00:00
+#PBS -o /lustre/haven/proj/UTK0022/PolymerGNN/formal/performance/outputs/iv/fold=NUM.o
+#PBS -e /lustre/haven/proj/UTK0022/PolymerGNN/formal/performance/outputs/iv/fold=NUM.e
+#PBS -N CV_IV_NUM
+
+base="/lustre/haven/proj/UTK0022/PolymerGNN/formal/performance"
+
+cd /lustre/haven/proj/UTK0022/PolymerGNN/formal/performance
+conda activate /lustre/haven/user/oqueen/polymergnn_env
+
+python3 src/cv_gnn.py \
+--num_cv 1 \
+--IV \
+--properties default \
+--results_save_dir $base/saved_scores/iv \
+--save_history \
+--history_loc $base/history/iv \
+--start_fold NUM
+--cv_verbose 0

@@ -175,7 +175,7 @@ def CV_eval(
         stop_option = 0,
         early_stop_delay = 100,
         save_state_dicts = False,
-        get_only_scores = False,
+        get_scores = False,
         device = None):
     '''
     
@@ -186,7 +186,7 @@ def CV_eval(
             evaluation on test set. 2 stops early if the validation loss was at least
             `early_stop_delay` epochs ago; it loads that trial's model and evaluates
             on it.
-        get_only_scores (bool, optional): If True, return only the average values of metrics 
+        get_scores (bool, optional): If True, return only the average values of metrics 
             across the folds
     
     '''
@@ -308,14 +308,26 @@ def CV_eval(
     print('Final avg. MSE:', np.mean(mse_test_per_fold))
     print('Final avg. MAE:', np.mean(mae_test_per_fold))
 
+    r2_avg = np.mean(r2_test_per_fold)
+    mae_avg = np.mean(mae_test_per_fold)
+
+    big_ret_dict = {
+        'r2': r2_avg,
+        'mae': mae_avg,
+        'all_predictions': all_predictions,
+        'all_y': all_y,
+        'all_reference_inds': all_reference_inds,
+        'model_state_dicts': model_state_dicts
+    }
+
     if save_state_dicts:
-        if get_only_scores:
-            return np.mean(r2_test_per_fold), np.mean(mae_test_per_fold), model_state_dicts
+        if get_scores:
+            return big_ret_dict
         else:
             return all_predictions, all_y, all_reference_inds, model_state_dicts
 
-    if get_only_scores: # Return only scores
-        return np.mean(r2_test_per_fold), np.mean(mae_test_per_fold)
+    if get_scores: # Return scores:
+        return big_ret_dict
 
     return all_predictions, all_y, all_reference_inds
 
