@@ -1,9 +1,10 @@
-import os, argparse
+import os, argparse, pickle
 import torch
 import pandas as pd
+import numpy as np
 from tqdm import trange
 from polymerlearn.utils import get_IV_add, get_Tg_add, GraphDataset
-from polymerlearn.models.gnn import PolymerGNN_IV, PolymerGNN_Tg
+from polymerlearn.models.gnn import PolymerGNN_IV, PolymerGNN_Tg, PolymerGNN_Joint
 from polymerlearn.utils import train, CV_eval, get_add_properties
 from polymerlearn.utils import CV_eval_joint
 
@@ -42,6 +43,11 @@ parser.add_argument('--properties', type = str,
 parser.add_argument('--results_save_dir', type = str, 
     help = 'Directory in which to save results as we evaluate folds in the CV.',
     default = None)
+parser.add_argument('--save_state_dicts', action = 'store_true',
+    help = 'Stores state dicts for all cross validated models')
+parser.add_argument('--save_state_dict_loc', default = None,
+    type = str,
+    help = 'Location to which to save state dicts; MUST BE PROVIDED if trying to save state dicts; should be absolute.')
 
 args = parser.parse_args()
 
@@ -95,7 +101,8 @@ if args.IV and args.Tg:
         verbose = 0,
         gamma = 1e5,
         get_only_scores = True,
-        device = device
+        device = device,
+        save_state_dicts = args.save_state_dicts
     )
 
 
@@ -140,7 +147,8 @@ if args.IV: # we're predicting IV
         verbose = 0,
         use_val = False,
         get_only_scores = True,
-        device = device
+        device = device,
+        save_state_dicts = args.save_state_dicts
     )
 
 if args.Tg: # We're predicting Tg:
@@ -184,7 +192,8 @@ if args.Tg: # We're predicting Tg:
         verbose = 0,
         use_val = False,
         get_only_scores = True,
-        device = device
+        device = device,
+        save_state_dicts = args.save_state_dicts
     )
 
 def save_to_loc(obj, cur_name):
@@ -198,7 +207,10 @@ if joint_model:
     }
 
     for fold in trange(args.num_cv):
-        results_dict = CV()
+        if args.save_state_dicts:
+            results_dict, state_dicts = CV()
+        else:
+            results_dict = CV()
 
         scores['IV'][0].append(results_dict['IV'][0])
         scores['IV'][1].append(results_dict['IV'][1])
@@ -208,18 +220,36 @@ if joint_model:
         if fold % 5 == 0 and (args.results_save_dir is not None):
             save_to_loc(scores, cur_name = name.format(fold))
 
+        if args.save_state_dicts and (args.save_state_dict_loc is not None):
+            for i in range(len(state_dicts)):
+                sd = state_dicts[i]
+                torch.save(sd, open(os.path.join(args.save_state_dict_loc, \
+                    'joint_model_fold={}_sd={}.pt'.format(fold, i)), 'wb'))
+
+
 else:
     r2_scores = []
     mae_scores = []
 
+    save_indicator = 'Tg' if args.Tg else 'IV'
+
     for fold in trange(args.num_cv):
-        avg_r2, avg_mae = CV()
+        if args.save_state_dicts:
+            avg_r2, avg_mae, state_dicts = CV()
+        else:
+            avg_r2, avg_mae = CV()
 
         r2_scores.append(avg_r2)
         mae_scores.append(avg_mae)
 
         if fold % 5 == 0 and (args.results_save_dir is not None):
             save_to_loc((r2_scores, mae_scores), cur_name = name.format(fold))
+
+        if args.save_state_dicts and (args.save_state_dict_loc is not None):
+            for i in range(len(state_dicts)):
+                sd = state_dicts[i]
+                torch.save(sd, open(os.path.join(args.save_state_dict_loc, \
+                    '{}_model_fold={}_sd={}.pt'.format(save_indicator, fold, i)), 'wb'))
 
     print('R2: {} +- {}'.format(
         np.mean(r2_scores),

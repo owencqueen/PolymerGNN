@@ -309,7 +309,10 @@ def CV_eval(
     print('Final avg. MAE:', np.mean(mae_test_per_fold))
 
     if save_state_dicts:
-        return all_predictions, all_y, all_reference_inds, model_state_dicts
+        if get_only_scores:
+            return np.mean(r2_test_per_fold), np.mean(mae_test_per_fold), model_state_dicts
+        else:
+            return all_predictions, all_y, all_reference_inds, model_state_dicts
 
     if get_only_scores: # Return only scores
         return np.mean(r2_test_per_fold), np.mean(mae_test_per_fold)
@@ -389,7 +392,8 @@ def CV_eval_joint(
         gamma = 1e4,
         epochs = 1000,
         get_only_scores = False,
-        device = None):
+        device = None,
+        save_state_dicts = False):
     '''
     Cross validation of the joint Tg/IV model
 
@@ -417,6 +421,8 @@ def CV_eval_joint(
     all_predictions = []
     all_y = []
     all_reference_inds = []
+
+    model_state_dicts = []
 
     for test_batch, Ytest, add_test, test_inds in dataset.Kfold_CV(folds = num_folds):
 
@@ -498,6 +504,9 @@ def CV_eval_joint(
         mae_test_per_fold_IV.append(mae_test_IV)
         mae_test_per_fold_Tg.append(mae_test_Tg)
 
+        if save_state_dicts:
+            model_state_dicts.append(model.state_dict())
+
     print('Final avg. r2: ', np.mean(r2_test_per_fold))
     print('Final avg. r2 IV: ', np.mean(r2_test_per_fold_IV))
     print('Final avg. r2 Tg: ', np.mean(r2_test_per_fold_Tg))
@@ -510,13 +519,20 @@ def CV_eval_joint(
     print('Final avg. MAE IV: ', np.mean(mae_test_per_fold_IV))
     print('Final avg. MAE Tg: ', np.mean(mae_test_per_fold_Tg))
 
+    d = {
+        'IV':(np.mean(r2_test_per_fold_IV), np.mean(mae_test_per_fold_IV)),
+        'Tg':(np.mean(r2_test_per_fold_Tg), np.mean(mae_test_per_fold_Tg))
+    }
+
+    if save_state_dicts:
+        if get_only_scores:
+            return d, model_state_dicts
+        else:
+            return all_predictions, all_y, all_reference_inds, model_state_dicts
+
     if get_only_scores:
         # Return only the r2, mae for each
         # Return in a dictionary
-        d = {
-            'IV':(np.mean(r2_test_per_fold_IV), np.mean(mae_test_per_fold_IV)),
-            'Tg':(np.mean(r2_test_per_fold_Tg), np.mean(mae_test_per_fold_Tg))
-        }
         return d
 
     return all_predictions, all_y, all_reference_inds
