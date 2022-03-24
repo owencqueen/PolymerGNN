@@ -8,7 +8,7 @@ setup(
     author = 'Owen Queen',
     autor_email = 'oqueen@vols.utk.edu',
     description='Machine learning for polymers',
-    install_requires = reqs,
+    #install_requires = reqs,
     packages=['polymerlearn'],
     zip_safe=False
 )

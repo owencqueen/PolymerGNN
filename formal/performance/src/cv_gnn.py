@@ -19,11 +19,16 @@ def build_transform_lists(raw_args):
         use_log.append( a[:3] == 'log' )
         if a[:3] == 'log':
             a = a[3:]
+
+        if a == 'Mw': # Support just Mw input
+            a = 'Mw (PS)'
+
         additionals.append(a) # Will be filtered if log
 
     return additionals, use_log
 
-structure_dir = '/lustre/haven/proj/UTK0022/PolymerGNN/Structures/AG/xyz'
+#structure_dir = '/lustre/haven/proj/UTK0022/PolymerGNN/Structures/AG/xyz'
+structure_dir = '/lustre/isaac/scratch/oqueen/PolymerGNN/Structures/AG/xyz'
 
 # Load data from local path:
 data = pd.read_csv(os.path.join('../../dataset', 
@@ -70,7 +75,7 @@ if args.IV and args.Tg:
 
     # Decide additional vectors:
     if 'default' in args.properties:
-        pass
+        add = get_IV_add(data)
     else:
         prop, use_log = build_transform_lists(args.properties)
         add = get_add_properties(data, prop, use_log)
@@ -106,12 +111,11 @@ if args.IV and args.Tg:
         gamma = 1e5,
         get_scores = True,
         device = device,
-        save_state_dicts = args.save_history
+        save_state_dicts = True
     )
 
 
-
-if args.IV: # we're predicting IV
+elif args.IV: # we're predicting IV
     targets = ['IV']
     name = 'IV_results_fold={}.pickle'
 
@@ -155,7 +159,7 @@ if args.IV: # we're predicting IV
         save_state_dicts = True
     )
 
-if args.Tg: # We're predicting Tg:
+elif args.Tg: # We're predicting Tg:
     targets = ['Tg']
     name = 'Tg_results_fold={}.pickle'
 
@@ -211,15 +215,16 @@ if joint_model:
     }
 
     for i in trange(args.num_cv):
-        if args.save_history:
-            results_dict, state_dicts = CV()
-        else:
-            results_dict = CV()
+        # if args.save_history:
+        #     results_dict, state_dicts = CV()
+        # else:
+        #     results_dict = CV()
+        history = CV()
 
-        scores['IV'][0].append(results_dict['IV'][0])
-        scores['IV'][1].append(results_dict['IV'][1])
-        scores['Tg'][0].append(results_dict['Tg'][0])
-        scores['Tg'][1].append(results_dict['Tg'][1])
+        scores['IV'][0].append(history['IV'][0])
+        scores['IV'][1].append(history['IV'][1])
+        scores['Tg'][0].append(history['Tg'][0])
+        scores['Tg'][1].append(history['Tg'][1])
 
         fold = i + args.start_fold # Set actual fold number wrt whole experiment
 
@@ -227,10 +232,12 @@ if joint_model:
             save_to_loc(scores, cur_name = name.format(fold))
 
         if args.save_history and (args.history_loc is not None):
-            for j in range(len(state_dicts)):
-                sd = state_dicts[j]
-                torch.save(sd, open(os.path.join(args.history_loc, \
-                    'joint_model_fold={}_sd={}.pt'.format(fold, j)), 'wb'))
+            hist_loc = os.path.join(args.history_loc, 'joint_model_fold={}.pickle'.format(fold))
+            pickle.dump(history, open(hist_loc, 'wb'))
+            # for j in range(len(state_dicts)):
+            #     sd = state_dicts[j]
+            #     torch.save(sd, open(os.path.join(args.history_loc, \
+            #         'joint_model_fold={}_sd={}.pt'.format(fold, j)), 'wb'))
 
 
 else:
@@ -256,7 +263,7 @@ else:
         # Save history:
         if args.save_history and (args.history_loc is not None):
             hist_loc = os.path.join(args.history_loc, '{}_model_fold={}.pickle'.format(save_indicator, fold))
-            pickle.dump(history, open(hist_loc, 'rb'))
+            pickle.dump(history, open(hist_loc, 'wb'))
             # for j in range(len(state_dicts)):
             #     sd = state_dicts[j]
             #     torch.save(sd, open(os.path.join(args.history_loc, \

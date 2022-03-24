@@ -504,7 +504,9 @@ class GraphDataset:
 
     def make_dataloader_by_mask(self, mask):
         '''
-        Makes an internal dataloader based on current train/test masks
+        Makes an internal dataloader based on some given list of indices
+            - Not technically a mask
+            - Makes no internal updates
         '''
 
         # Perform all train masking: -------------------------------
@@ -520,6 +522,14 @@ class GraphDataset:
 
         return data
 
+    def get_additional_by_mask(self, mask):
+        '''
+        Get additional elements based on given list of indices
+        '''
+        return [self.add_features[int(i)] for i in mask]
+
+    def get_Y_by_mask(self, mask):
+        return [self.Y[int(i)] for i in mask]
 
     def split_by_indices(self, train_mask, test_mask, val_mask = None):
         '''

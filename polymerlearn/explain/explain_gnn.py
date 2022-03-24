@@ -159,17 +159,25 @@ class PolymerGNNExplainer:
 
     def get_testing_explanation(self,
             dataset,
+            test_inds = None,
             add_data_keys = ['Mw', 'AN', 'OHN', '%TMP']):
         '''
         
         Args:
-            dataset
+            dataset: Dataset object from which to extract
+            test_inds (list of ints, optional): If given, extracts testing 
+                data from the dataset with respect to the indices.
             add_data_keys (list of str): List that should have the same
                 length as additional 
         '''
 
-        test_batch, Ytest, add_test = dataset.get_test()
-        test_inds = dataset.test_mask
+        if test_inds is None:
+            test_batch, Ytest, add_test = dataset.get_test()
+            test_inds = dataset.test_mask
+        else:
+            test_batch = dataset.make_dataloader_by_mask(test_inds)
+            Ytest = dataset.get_Y_by_mask(test_inds)
+            add_test = dataset.get_additional_by_mask(test_inds)
 
         exp_summary = []
 

@@ -403,7 +403,7 @@ def CV_eval_joint(
         verbose = 1,
         gamma = 1e4,
         epochs = 1000,
-        get_only_scores = False,
+        get_scores = False,
         device = None,
         save_state_dicts = False):
     '''
@@ -533,17 +533,20 @@ def CV_eval_joint(
 
     d = {
         'IV':(np.mean(r2_test_per_fold_IV), np.mean(mae_test_per_fold_IV)),
-        'Tg':(np.mean(r2_test_per_fold_Tg), np.mean(mae_test_per_fold_Tg))
+        'Tg':(np.mean(r2_test_per_fold_Tg), np.mean(mae_test_per_fold_Tg)),
+        'all_predictions': all_predictions,
+        'all_y': all_y,
+        'all_reference_inds': all_reference_inds,
+        'model_state_dicts': model_state_dicts
     }
 
     if save_state_dicts:
-        if get_only_scores:
-            return d, model_state_dicts
+        if get_scores:
+            return d
         else:
             return all_predictions, all_y, all_reference_inds, model_state_dicts
 
-    if get_only_scores:
-        # Return only the r2, mae for each
+    if get_scores:
         # Return in a dictionary
         return d
 
