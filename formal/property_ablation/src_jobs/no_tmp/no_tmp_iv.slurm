@@ -6,8 +6,8 @@
 #SBATCH --ntasks-per-node=4
 ##SBATCH --gres=gpu:1
 #SBATCH --time=02:00:00
-#SBATCH -o /lustre/isaac/scratch/oqueen/PolymerGNN/formal/property_ablation/src_jobs/no_tmp/outputs/fold=CVNUM.o
-#SBATCH -e /lustre/isaac/scratch/oqueen/PolymerGNN/formal/property_ablation/src_jobs/no_tmp/outputs/fold=CVNUM.e
+#SBATCH -o /lustre/isaac/scratch/oqueen/PolymerGNN/formal/property_ablation/src_jobs/no_tmp/outputs_iv/fold=CVNUM.o
+#SBATCH -e /lustre/isaac/scratch/oqueen/PolymerGNN/formal/property_ablation/src_jobs/no_tmp/outputs_iv/fold=CVNUM.e
 #SBATCH -J CVNUM_IVnotmp
 
 base="/lustre/isaac/scratch/oqueen/PolymerGNN/formal/property_ablation"

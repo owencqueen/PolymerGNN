@@ -1,8 +1,10 @@
-Fold: 1 	 Test r2: 0.8393 	 Test Loss: 0.0054 	 Test MAE: 0.0550
-Fold: 2 	 Test r2: 0.5996 	 Test Loss: 0.0303 	 Test MAE: 0.0957
-Fold: 3 	 Test r2: 0.8842 	 Test Loss: 0.0039 	 Test MAE: 0.0451
-Fold: 4 	 Test r2: 0.7554 	 Test Loss: 0.0113 	 Test MAE: 0.0686
-Fold: 5 	 Test r2: 0.7551 	 Test Loss: 0.0102 	 Test MAE: 0.0678
-Final avg. r2:  0.7667228874225727
-Final avg. MSE: 0.01224333862789783
-Final avg. MAE: 0.06642781044641624
+Fold: 1 	 Test r2: 0.7805 	 Test Loss: 0.0106 	 Test MAE: 0.0663
+Fold: 2 	 Test r2: 0.7354 	 Test Loss: 0.0123 	 Test MAE: 0.0620
+Fold: 3 	 Test r2: 0.5790 	 Test Loss: 0.0139 	 Test MAE: 0.0760
+Fold: 4 	 Test r2: 0.6428 	 Test Loss: 0.0235 	 Test MAE: 0.0833
+Fold: 5 	 Test r2: 0.3651 	 Test Loss: 0.0234 	 Test MAE: 0.0905
+Final avg. r2:  0.6205934934889203
+Final avg. MSE: 0.016752282890780134
+Final avg. MAE: 0.07562926452366167
+R2: 0.6205934934889203 +- 0.0
+MAE: 0.07562926452366167 +- 0.0
