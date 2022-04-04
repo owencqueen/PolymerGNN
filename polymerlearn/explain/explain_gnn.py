@@ -176,7 +176,7 @@ class PolymerGNNExplainer:
             test_inds = dataset.test_mask
         else:
             test_batch = dataset.make_dataloader_by_mask(test_inds)
-            Ytest = dataset.get_Y_by_mask(test_inds)
+            Ytest = np.array(dataset.get_Y_by_mask(test_inds))
             add_test = dataset.get_additional_by_mask(test_inds)
 
         exp_summary = []
@@ -192,9 +192,9 @@ class PolymerGNNExplainer:
             Ti = test_inds[i]
             scores['table_ind'] = Ti
 
-            print(scores)
-            print(acids[Ti])
-            print(glycols[Ti])
+            # print(scores)
+            # print(acids[Ti])
+            # print(glycols[Ti])
 
             for a in range(len(acids[Ti])):
                 Ascore = scores['A'].item() if len(acids[Ti]) == 1 else scores['A'][a].item()

@@ -62,13 +62,16 @@ def get_Tg_add(data):
 
     return add
 
-def get_add_properties(data: pd.DataFrame, prop_names: List[str], use_log: List[bool]):
+def get_add_properties(data: pd.DataFrame, prop_names: List[str], use_log: List[bool] = None):
     '''
     Gets properties to add to the model given data, names of properties, 
         and whether to log transform them.
     '''
 
     add_vectors = []
+
+    if use_log is None:
+        use_log = [True] * len(prop_names)
 
     for p,l in zip(prop_names, use_log):
         fill_value = 0 if p=='%TMP' else None
