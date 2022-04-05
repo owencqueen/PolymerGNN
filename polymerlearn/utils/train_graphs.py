@@ -154,7 +154,8 @@ def train(
         test_preds = []
         with torch.no_grad():
             for i in range(Ytest.shape[0]):
-                test_preds.append(model(*make_like_batch(test_batch[i]), add_test[i]).clone().detach().item())
+                at = None if add_test is None else torch.tensor(add_test[i]).float()
+                test_preds.append(model(*make_like_batch(test_batch[i]), at).clone().detach().item())
 
         r2_test = r2_score(Ytest.numpy(), test_preds)
         mse_test = mean_squared_error(Ytest.numpy(), test_preds)
@@ -233,7 +234,8 @@ def CV_eval(
             for i in range(batch_size):
 
                 # Predictions:
-                train_prediction = model(*make_like_batch(batch[i]), torch.tensor(add_features[i]).float())
+                af = None if add_features is None else torch.tensor(add_features[i]).float()
+                train_prediction = model(*make_like_batch(batch[i]), af)
                 train_predictions.append(train_prediction.clone().detach().item())
 
                 # Compute and backprop loss
@@ -287,7 +289,8 @@ def CV_eval(
         test_preds = []
         with torch.no_grad():
             for i in range(Ytest.shape[0]):
-                pred = model(*make_like_batch(test_batch[i]), torch.tensor(add_test[i]).float()).clone().detach().item()
+                at = None if add_test is None else torch.tensor(add_test[i]).float()
+                pred = model(*make_like_batch(test_batch[i]), at).clone().detach().item()
                 test_preds.append(pred)
                 all_predictions.append(pred)
                 all_y.append(Ytest[i].item())
@@ -364,7 +367,8 @@ def train_joint(
 
             # Predictions:
             #predictions = torch.tensor([model(*make_like_batch(batch[i])) for i in range(batch_size)], requires_grad = True).float()
-            train_prediction = model(*make_like_batch(batch[i]), torch.tensor(add_features[i]).float())
+            af = None if add_features is None else torch.tensor(add_features[i]).float()
+            train_prediction = model(*make_like_batch(batch[i]), af)
             #train_predictions.append(train_prediction.clone().detach().item())
             train_predictions.append([train_prediction[i].clone().detach().item() for i in ['IV', 'Tg']])
             #print(predictions)
@@ -454,6 +458,8 @@ def CV_eval_joint(
             
             # Batch:
             batch, Y, add_features = dataset.get_train_batch(size = batch_size)
+            if add_features is not None:
+                add_features = torch.tensor(add_features).float()
 
             #Y = np.log(Y) # Log transform Y
             #[:, 0] = Y[:, 0])
@@ -465,7 +471,8 @@ def CV_eval_joint(
 
                 # Predictions:
                 #predictions = torch.tensor([model(*make_like_batch(batch[i])) for i in range(batch_size)], requires_grad = True).float()
-                train_prediction = model(*make_like_batch(batch[i]), torch.tensor(add_features[i]).float())
+                af = None if add_features is None else add_features[i]
+                train_prediction = model(*make_like_batch(batch[i]), af)
                 train_predictions.append([train_prediction[i].clone().detach().item() for i in ['IV', 'Tg']])
                 #print(predictions)
 
@@ -488,7 +495,8 @@ def CV_eval_joint(
         with torch.no_grad():
             for i in range(Ytest.shape[0]):
                 #test_preds.append(model(*make_like_batch(test_batch[i]), torch.tensor(add_test[i]).float()).clone().detach().item())
-                test_pred = model(*make_like_batch(test_batch[i]), torch.tensor(add_test[i]).float())
+                at = None if add_test is None else torch.tensor(add_test[i]).float()
+                test_pred = model(*make_like_batch(test_batch[i]), at)
                 pred = [test_pred[i].clone().detach().item() for i in ['IV', 'Tg']]
                 test_preds.append(pred)
                 all_predictions.append(pred)

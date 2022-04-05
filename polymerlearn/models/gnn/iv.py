@@ -1,8 +1,17 @@
 import torch
+import torch_geometric
 from torch_geometric.nn import SAGEConv, GATConv, Sequential, BatchNorm
 from torch_geometric.nn import SAGPooling
 
 class PolymerGNN_IV(torch.nn.Module):
+    '''
+    Args:
+        input_feat (int): Number of input features on each node.
+        hidden_channels (int): Number of neurons in hidden layers throughout
+            the neural network.
+        num_additional (int, optional): Number of additional resin properties
+            to be used during the training/prediction.
+    '''
     def __init__(self, input_feat, hidden_channels, num_additional = 0):
         super(PolymerGNN_IV, self).__init__()
         self.hidden_channels = hidden_channels
@@ -31,17 +40,20 @@ class PolymerGNN_IV(torch.nn.Module):
         self.leaky1 = torch.nn.PReLU()
         self.fc2 = torch.nn.Linear(hidden_channels, 1)
 
-    def forward(self, Abatch: torch.Tensor, Gbatch: torch.Tensor, add_features: torch.Tensor):
+    def forward(self, Abatch: torch_geometric.data.Batch, Gbatch: torch_geometric.data.Batch, 
+            add_features: torch.Tensor):
         '''
-        
+        Args:
+            Abatch (torch_geometric.data.Batch): Batch object representing all acids in
+                the input. See make_like_batch for transforming to this.
+            Gbatch (torch_geometric.data.Batch): Batch object representing all glycols in
+                the input. See make_like_batch for transforming to this.
+            add_features (torch.Tensor): Additional features for this sample.
         '''
         # Decompose X into acid and glycol
 
         Aembeddings = self.Asage(Abatch.x, Abatch.edge_index, Abatch.batch)[0]
         Gembeddings = self.Gsage(Gbatch.x, Gbatch.edge_index, Gbatch.batch)[0]
-
-        # self.saveA_embed = Aembed.clone()
-        # self.saveG_embed = Gembed.clone()
         
         Aembed, _ = torch.max(Aembeddings, dim=0)
         Gembed, _ = torch.max(Gembeddings, dim=0)

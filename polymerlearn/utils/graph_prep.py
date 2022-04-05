@@ -430,7 +430,7 @@ class GraphDataset:
         sample_inds = random.sample(list(np.arange(len(self.Ytrain))), k = size)
 
         if self.add_features is None:
-            return [self.train_data[i] for i in sample_inds], torch.tensor([self.Ytrain[i] for i in sample_inds]).float()
+            return [self.train_data[i] for i in sample_inds], torch.tensor([self.Ytrain[i] for i in sample_inds]).float(), None
         else:
             train_masked = [self.train_data[i] for i in sample_inds]
             Y_masked = torch.tensor(np.array([self.Ytrain[i] for i in sample_inds])).float()
@@ -569,6 +569,11 @@ class GraphDataset:
             self.add_test = [self.add_features[int(i)] for i in test_mask]
             if self.val_mask is not None:
                 self.add_val = [self.add_features[int(i)] for i in val_mask]
+        else:
+            self.add_train = None
+            self.add_test = None
+            if self.val_mask is not None:
+                self.add_val = None
 
 # Misc. testing functions:
 def test_xyz2mol():

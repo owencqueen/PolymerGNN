@@ -57,6 +57,8 @@ parser.add_argument('--start_fold', required = True, type = int,
     help = 'Starting fold number. i.e. we could have 5 folds, 30-34, this number would be 30. Used for parallelization of the job script.')
 parser.add_argument('--cv_verbose', default = 0, type = int,
     help = 'Level of verbosity for cross validation function (see Python documentation).')
+parser.add_argument('--noprop', action = 'store_true',
+    help = 'If included, includes no additional resin properties')
 
 args = parser.parse_args()
 
@@ -74,7 +76,9 @@ if args.IV and args.Tg:
     name = 'joint_results_fold={}.pickle'
 
     # Decide additional vectors:
-    if 'default' in args.properties:
+    if args.noprop:
+        add = None
+    elif 'default' in args.properties:
         add = get_IV_add(data)
     else:
         prop, use_log = build_transform_lists(args.properties)
@@ -92,7 +96,7 @@ if args.IV and args.Tg:
     model_generator_kwargs = {
         'input_feat': 6,
         'hidden_channels': 32,
-        'num_additional': add.shape[1], 
+        'num_additional': 0 if args.noprop else add.shape[1], 
     }
 
     model_gen = PolymerGNN_Joint
@@ -120,7 +124,9 @@ elif args.IV: # we're predicting IV
     name = 'IV_results_fold={}.pickle'
 
     # Decide additional vectors:
-    if 'default' in args.properties:
+    if args.noprop:
+        add = None
+    elif 'default' in args.properties:
         add = get_IV_add(data)
     else:
         prop, use_log = build_transform_lists(args.properties)
@@ -137,7 +143,7 @@ elif args.IV: # we're predicting IV
     model_generator_kwargs = {
         'input_feat': 6,
         'hidden_channels': 32,
-        'num_additional': add.shape[1], 
+        'num_additional': 0 if args.noprop else add.shape[1], 
     }
 
     model_gen = PolymerGNN_IV
@@ -164,7 +170,9 @@ elif args.Tg: # We're predicting Tg:
     name = 'Tg_results_fold={}.pickle'
 
     # Decide additional vectors:
-    if 'default' in args.properties:
+    if args.noprop:
+        add = None
+    elif 'default' in args.properties:
         add = get_Tg_add(data)
     else:
         prop, use_log = build_transform_lists(args.properties)
@@ -182,7 +190,7 @@ elif args.Tg: # We're predicting Tg:
     model_generator_kwargs = {
         'input_feat': 6,
         'hidden_channels': 32,
-        'num_additional': add.shape[1], 
+        'num_additional': 0 if args.noprop else add.shape[1], 
     }
 
     model_gen = PolymerGNN_Tg
