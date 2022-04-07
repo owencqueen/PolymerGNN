@@ -1,5 +1,33 @@
 # PolymerGNN
-GNNs for polymer property prediction.
+Graph neural networks for polymer property prediction.
+
+## PolymerLearn Package Structure
+`polymerlearn` is the main component of the repository. This contains all of the driver code for `PolymerGNN`, explainability tools, and utilities for proprocessing data in the format provided.
+
+```
+polymerlearn
+├── __init__.py
+├── explain
+│   ├── __init__.py
+│   ├── custom_gcam.py
+│   ├── explain_gnn.py
+│   └── modified_gnns.py
+├── models
+│   └── gnn
+│       ├── __init__.py
+│       ├── iv.py
+│       ├── iv_evidential.py
+│       ├── joint.py
+│       └── tg.py
+└── utils
+    ├── __init__.py
+    ├── graph_prep.py
+    ├── losses.py
+    ├── train_evidential.py
+    ├── train_graphs.py
+    ├── uncertainty.py
+    └── xyz2mol.py
+```
 
 ## Setting up the Environment
 
