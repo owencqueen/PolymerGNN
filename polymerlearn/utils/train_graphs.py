@@ -7,6 +7,8 @@ from typing import List
 from torch_geometric.data import Batch, Data
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 
+from polymerlearn.utils import GraphDataset
+
 def get_vector(
         data: pd.DataFrame, 
         prop: str = 'Mw (PS)', 
@@ -118,13 +120,23 @@ def check_early_stop(loss_list, delay = 100):
     return ((len(loss_list) - largest) > delay) and smooth
 
 def train(
-        model, 
+        model: torch.nn.Module, 
         optimizer, 
         criterion, 
-        dataset, 
-        batch_size = 64, 
-        epochs = 100
+        dataset: GraphDataset, 
+        batch_size: int = 64, 
+        epochs: int = 1000
     ):
+    '''
+    Args:
+        model: Neural network to train
+        optimizer: Optimizer to use when training the model.
+        criterion: Loss function.
+        dataset: Dataset class.
+        batch_size: Number of samples on which to optimize at each iteration. See
+            the description in CV_Eval
+        epochs: Number of iterations to train on the data.
+    '''
 
     for e in range(epochs):
         
@@ -139,7 +151,8 @@ def train(
 
             # Predictions:
             #predictions = torch.tensor([model(*make_like_batch(batch[i])) for i in range(batch_size)], requires_grad = True).float()
-            train_prediction = model(*make_like_batch(batch[i]), torch.tensor(add_features[i]).float())
+            af = None if add_features is None else torch.tensor(add_features[i]).float()
+            train_prediction = model(*make_like_batch(batch[i]), af)
             train_predictions.append(train_prediction.clone().detach().item())
             #print(predictions)
 
@@ -154,7 +167,7 @@ def train(
         test_preds = []
         with torch.no_grad():
             for i in range(Ytest.shape[0]):
-                at = None if add_test is None else torch.tensor(add_test[i]).float()
+                at = None if add_test is None else add_test[i].clone().detach()
                 test_preds.append(model(*make_like_batch(test_batch[i]), at).clone().detach().item())
 
         r2_test = r2_score(Ytest.numpy(), test_preds)
@@ -165,7 +178,7 @@ def train(
 
 
 def CV_eval(
-        dataset,
+        dataset: GraphDataset,
         model_generator: torch.nn.Module,
         optimizer_generator,
         criterion,
@@ -182,17 +195,40 @@ def CV_eval(
         get_scores = False,
         device = None):
     '''
-    
     Args:
+        dataset (GraphDataset): Preprocessed dataset matching the GraphDataset
+            API.
+        model_generator (torch.nn.Module): Class of the neural network/model that
+            can be instantiated multiple times within the function.
+        optimizer_generator: Optimizer that can be instantiated multiple times within
+            the function.
+        criterion: Loss function that can be instantiated multiple times within
+            the function.
+        model_generator_kwargs (dict): Dictionary of keyword arguments to be passed
+            to the model for every instantiation.
+        optimizer_kwargs (dict): Dictionary of keyword arguments to be passed
+            to the optimizer for every instantiation.
+        batch_size (int): Number of samples to be optimized on for each step. Note
+            this works differently than batch size in stochastic gradient descent.
+            Here, the higher value for the argument denotes more samples to be
+            trained on per epoch (usually vice versa is standard).
+        verbose (int): Level at which to print. Should be 0 or 1.
+        epochs (int): Number of training iterations on the dataset.
+        use_val (bool): If true, uses the validation set in the Dataset class.
+        val_sise (float): Size of the validation set to use
         stop_option (int): Option that specifies which method to use for early
             stopping/validation saving. 0 simply performs all epochs for each fold.
             1 performs all epochs but uses model with highest validation score for 
             evaluation on test set. 2 stops early if the validation loss was at least
             `early_stop_delay` epochs ago; it loads that trial's model and evaluates
             on it.
+        early_stop_delay (int): Number of epochs to wait after an early stopping condition
+            is met.
+        save_state_dicts (bool): If True, returns state dictionaries for the model at
+            each fold. Useful for explainability.
         get_scores (bool, optional): If True, return only the average values of metrics 
             across the folds
-    
+        device (str): Device name at which to run torch calculations on. Supports GPU.
     '''
 
     num_folds = 5
