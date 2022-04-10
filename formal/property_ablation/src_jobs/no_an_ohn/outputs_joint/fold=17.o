@@ -1,0 +1,114 @@
+Fold: 1 	 Epoch: 0, 	 Train r2: -0.7807 	 Train Loss: 653300.3831
+Fold: 1 	 Epoch: 50, 	 Train r2: 0.4765 	 Train Loss: 288741.9518
+Fold: 1 	 Epoch: 100, 	 Train r2: 0.5417 	 Train Loss: 164283.4980
+Fold: 1 	 Epoch: 150, 	 Train r2: 0.7233 	 Train Loss: 114076.0113
+Fold: 1 	 Epoch: 200, 	 Train r2: 0.7657 	 Train Loss: 106681.9501
+Fold: 1 	 Epoch: 250, 	 Train r2: 0.7990 	 Train Loss: 124667.3272
+Fold: 1 	 Epoch: 300, 	 Train r2: 0.8193 	 Train Loss: 77059.6270
+Fold: 1 	 Epoch: 350, 	 Train r2: 0.8399 	 Train Loss: 67377.1830
+Fold: 1 	 Epoch: 400, 	 Train r2: 0.8433 	 Train Loss: 70049.0729
+Fold: 1 	 Epoch: 450, 	 Train r2: 0.8375 	 Train Loss: 86589.7558
+Fold: 1 	 Epoch: 500, 	 Train r2: 0.8281 	 Train Loss: 67953.0179
+Fold: 1 	 Epoch: 550, 	 Train r2: 0.8445 	 Train Loss: 99528.6708
+Fold: 1 	 Epoch: 600, 	 Train r2: 0.8502 	 Train Loss: 62936.0739
+Fold: 1 	 Epoch: 650, 	 Train r2: 0.8080 	 Train Loss: 110170.4509
+Fold: 1 	 Epoch: 700, 	 Train r2: 0.8570 	 Train Loss: 91750.6282
+Fold: 1 	 Epoch: 750, 	 Train r2: 0.8662 	 Train Loss: 91755.4876
+Fold: 1 	 Epoch: 800, 	 Train r2: 0.8751 	 Train Loss: 67366.0263
+Fold: 1 	 Epoch: 850, 	 Train r2: 0.9051 	 Train Loss: 55275.1206
+Fold: 1 	 Epoch: 900, 	 Train r2: 0.8931 	 Train Loss: 71862.8691
+Fold: 1 	 Epoch: 950, 	 Train r2: 0.9066 	 Train Loss: 49003.8642
+Fold: 1 	 Test r2: 0.8195 	 r2_IV: 0.7052 	 r2_Tg: 0.9337 	 MSE: 52.8605 	 MSE_IV: 0.0132 	 MSE_Tg: 105.7077 	 MAE: 3.6018 	 MAE_IV: 0.0870 	 MAE_Tg: 7.1165
+Fold: 2 	 Epoch: 0, 	 Train r2: -3.2832 	 Train Loss: 2544688.6367
+Fold: 2 	 Epoch: 50, 	 Train r2: 0.4609 	 Train Loss: 263196.9680
+Fold: 2 	 Epoch: 100, 	 Train r2: 0.5878 	 Train Loss: 301073.4245
+Fold: 2 	 Epoch: 150, 	 Train r2: 0.7241 	 Train Loss: 217477.0193
+Fold: 2 	 Epoch: 200, 	 Train r2: 0.7932 	 Train Loss: 124746.8976
+Fold: 2 	 Epoch: 250, 	 Train r2: 0.7846 	 Train Loss: 117029.7140
+Fold: 2 	 Epoch: 300, 	 Train r2: 0.8843 	 Train Loss: 58106.7161
+Fold: 2 	 Epoch: 350, 	 Train r2: 0.8681 	 Train Loss: 76710.2908
+Fold: 2 	 Epoch: 400, 	 Train r2: 0.8861 	 Train Loss: 83838.4779
+Fold: 2 	 Epoch: 450, 	 Train r2: 0.9086 	 Train Loss: 64187.8362
+Fold: 2 	 Epoch: 500, 	 Train r2: 0.8794 	 Train Loss: 81588.5883
+Fold: 2 	 Epoch: 550, 	 Train r2: 0.8627 	 Train Loss: 92979.7718
+Fold: 2 	 Epoch: 600, 	 Train r2: 0.8999 	 Train Loss: 57885.6112
+Fold: 2 	 Epoch: 650, 	 Train r2: 0.8700 	 Train Loss: 69262.2274
+Fold: 2 	 Epoch: 700, 	 Train r2: 0.9122 	 Train Loss: 55715.1710
+Fold: 2 	 Epoch: 750, 	 Train r2: 0.8800 	 Train Loss: 94905.9501
+Fold: 2 	 Epoch: 800, 	 Train r2: 0.8890 	 Train Loss: 72164.3310
+Fold: 2 	 Epoch: 850, 	 Train r2: 0.9127 	 Train Loss: 43228.0694
+Fold: 2 	 Epoch: 900, 	 Train r2: 0.8559 	 Train Loss: 74214.0596
+Fold: 2 	 Epoch: 950, 	 Train r2: 0.8997 	 Train Loss: 47126.8635
+Fold: 2 	 Test r2: 0.7617 	 r2_IV: 0.7952 	 r2_Tg: 0.7283 	 MSE: 147.3881 	 MSE_IV: 0.0069 	 MSE_Tg: 294.7694 	 MAE: 5.6841 	 MAE_IV: 0.0664 	 MAE_Tg: 11.3018
+Fold: 3 	 Epoch: 0, 	 Train r2: -2.3483 	 Train Loss: 1649700.2095
+Fold: 3 	 Epoch: 50, 	 Train r2: 0.3137 	 Train Loss: 263771.6472
+Fold: 3 	 Epoch: 100, 	 Train r2: 0.5670 	 Train Loss: 222885.1634
+Fold: 3 	 Epoch: 150, 	 Train r2: 0.7478 	 Train Loss: 122186.1937
+Fold: 3 	 Epoch: 200, 	 Train r2: 0.8218 	 Train Loss: 71772.0758
+Fold: 3 	 Epoch: 250, 	 Train r2: 0.8572 	 Train Loss: 67934.2982
+Fold: 3 	 Epoch: 300, 	 Train r2: 0.8966 	 Train Loss: 43008.3179
+Fold: 3 	 Epoch: 350, 	 Train r2: 0.8780 	 Train Loss: 58597.8197
+Fold: 3 	 Epoch: 400, 	 Train r2: 0.8787 	 Train Loss: 58185.2654
+Fold: 3 	 Epoch: 450, 	 Train r2: 0.9101 	 Train Loss: 40511.5329
+Fold: 3 	 Epoch: 500, 	 Train r2: 0.9250 	 Train Loss: 31740.0707
+Fold: 3 	 Epoch: 550, 	 Train r2: 0.9277 	 Train Loss: 38522.1840
+Fold: 3 	 Epoch: 600, 	 Train r2: 0.8992 	 Train Loss: 50265.7159
+Fold: 3 	 Epoch: 650, 	 Train r2: 0.9024 	 Train Loss: 37612.4163
+Fold: 3 	 Epoch: 700, 	 Train r2: 0.9250 	 Train Loss: 40549.1981
+Fold: 3 	 Epoch: 750, 	 Train r2: 0.9409 	 Train Loss: 26091.8080
+Fold: 3 	 Epoch: 800, 	 Train r2: 0.9165 	 Train Loss: 30147.5705
+Fold: 3 	 Epoch: 850, 	 Train r2: 0.9268 	 Train Loss: 35620.2609
+Fold: 3 	 Epoch: 900, 	 Train r2: 0.9412 	 Train Loss: 21348.4881
+Fold: 3 	 Epoch: 950, 	 Train r2: 0.9238 	 Train Loss: 26361.7321
+Fold: 3 	 Test r2: 0.7528 	 r2_IV: 0.5922 	 r2_Tg: 0.9133 	 MSE: 87.5139 	 MSE_IV: 0.0332 	 MSE_Tg: 174.9946 	 MAE: 5.5559 	 MAE_IV: 0.0899 	 MAE_Tg: 11.0220
+Fold: 4 	 Epoch: 0, 	 Train r2: -2.8282 	 Train Loss: 1709302.3991
+Fold: 4 	 Epoch: 50, 	 Train r2: 0.4981 	 Train Loss: 193631.9230
+Fold: 4 	 Epoch: 100, 	 Train r2: 0.6039 	 Train Loss: 142348.1796
+Fold: 4 	 Epoch: 150, 	 Train r2: 0.6062 	 Train Loss: 200762.4150
+Fold: 4 	 Epoch: 200, 	 Train r2: 0.6884 	 Train Loss: 114673.4553
+Fold: 4 	 Epoch: 250, 	 Train r2: 0.7372 	 Train Loss: 129314.8178
+Fold: 4 	 Epoch: 300, 	 Train r2: 0.7183 	 Train Loss: 119466.2065
+Fold: 4 	 Epoch: 350, 	 Train r2: 0.7948 	 Train Loss: 72818.7736
+Fold: 4 	 Epoch: 400, 	 Train r2: 0.8468 	 Train Loss: 68404.8571
+Fold: 4 	 Epoch: 450, 	 Train r2: 0.7810 	 Train Loss: 82264.2537
+Fold: 4 	 Epoch: 500, 	 Train r2: 0.8497 	 Train Loss: 66402.7535
+Fold: 4 	 Epoch: 550, 	 Train r2: 0.8606 	 Train Loss: 78548.3502
+Fold: 4 	 Epoch: 600, 	 Train r2: 0.8891 	 Train Loss: 61577.4758
+Fold: 4 	 Epoch: 650, 	 Train r2: 0.9009 	 Train Loss: 39348.3961
+Fold: 4 	 Epoch: 700, 	 Train r2: 0.9054 	 Train Loss: 33362.4570
+Fold: 4 	 Epoch: 750, 	 Train r2: 0.9239 	 Train Loss: 32325.5190
+Fold: 4 	 Epoch: 800, 	 Train r2: 0.9246 	 Train Loss: 33075.8075
+Fold: 4 	 Epoch: 850, 	 Train r2: 0.9086 	 Train Loss: 55244.1171
+Fold: 4 	 Epoch: 900, 	 Train r2: 0.9145 	 Train Loss: 30548.3872
+Fold: 4 	 Epoch: 950, 	 Train r2: 0.8965 	 Train Loss: 43598.9199
+Fold: 4 	 Test r2: 0.8419 	 r2_IV: 0.7341 	 r2_Tg: 0.9496 	 MSE: 47.9245 	 MSE_IV: 0.0148 	 MSE_Tg: 95.8341 	 MAE: 4.0696 	 MAE_IV: 0.0754 	 MAE_Tg: 8.0638
+Fold: 5 	 Epoch: 0, 	 Train r2: -1.6192 	 Train Loss: 1369150.5610
+Fold: 5 	 Epoch: 50, 	 Train r2: 0.5532 	 Train Loss: 265737.0782
+Fold: 5 	 Epoch: 100, 	 Train r2: 0.6325 	 Train Loss: 200017.9612
+Fold: 5 	 Epoch: 150, 	 Train r2: 0.6981 	 Train Loss: 168462.7581
+Fold: 5 	 Epoch: 200, 	 Train r2: 0.7717 	 Train Loss: 132949.1215
+Fold: 5 	 Epoch: 250, 	 Train r2: 0.8234 	 Train Loss: 125681.2495
+Fold: 5 	 Epoch: 300, 	 Train r2: 0.7928 	 Train Loss: 84782.0629
+Fold: 5 	 Epoch: 350, 	 Train r2: 0.8267 	 Train Loss: 72083.4654
+Fold: 5 	 Epoch: 400, 	 Train r2: 0.8112 	 Train Loss: 76609.1709
+Fold: 5 	 Epoch: 450, 	 Train r2: 0.8622 	 Train Loss: 53735.9986
+Fold: 5 	 Epoch: 500, 	 Train r2: 0.8613 	 Train Loss: 71916.8850
+Fold: 5 	 Epoch: 550, 	 Train r2: 0.8886 	 Train Loss: 42603.4426
+Fold: 5 	 Epoch: 600, 	 Train r2: 0.8997 	 Train Loss: 47468.6123
+Fold: 5 	 Epoch: 650, 	 Train r2: 0.6144 	 Train Loss: 147816.7760
+Fold: 5 	 Epoch: 700, 	 Train r2: 0.8727 	 Train Loss: 48008.3710
+Fold: 5 	 Epoch: 750, 	 Train r2: 0.9029 	 Train Loss: 63677.2073
+Fold: 5 	 Epoch: 800, 	 Train r2: 0.9178 	 Train Loss: 53636.4320
+Fold: 5 	 Epoch: 850, 	 Train r2: 0.9345 	 Train Loss: 30534.0906
+Fold: 5 	 Epoch: 900, 	 Train r2: 0.9041 	 Train Loss: 59006.2429
+Fold: 5 	 Epoch: 950, 	 Train r2: 0.9555 	 Train Loss: 33747.5731
+Fold: 5 	 Test r2: 0.7851 	 r2_IV: 0.6813 	 r2_Tg: 0.8889 	 MSE: 112.8776 	 MSE_IV: 0.0137 	 MSE_Tg: 225.7415 	 MAE: 4.2768 	 MAE_IV: 0.0784 	 MAE_Tg: 8.4753
+Final avg. r2:  0.7921896288287902
+Final avg. r2 IV:  0.70162533837933
+Final avg. r2 Tg:  0.8827539228178697
+Final avg. MSE: 89.71291002111636
+Final avg. MSE IV:  0.016373548864381936
+Final avg. MSE Tg:  179.40944649336834
+Final avg. MAE: 4.63765118972356
+Final avg. MAE IV:  0.07941745416204812
+Final avg. MAE Tg:  9.195884925285071

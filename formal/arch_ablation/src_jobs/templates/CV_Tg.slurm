@@ -13,7 +13,7 @@ base="/lustre/isaac/scratch/oqueen/PolymerGNN/formal/arch_ablation"
 cd $base
 conda activate /lustre/isaac/scratch/oqueen/polymergnn_env
 
-python3 src/cv_gnn.py \
+python3 src/mono_graph.py \
 --num_cv 1 \
 --Tg \
 --properties default \
