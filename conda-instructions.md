@@ -18,3 +18,8 @@ Additional pip requirements (latest version of each should work):
 6. `scipy`
 7. `captum` (tools for explainability)
 8. `networkx`
+
+Finally, you'll need to make sure that the reference to the `polymerlearn` package is installed locally. From the main PolymerGNN directory, please run
+```
+pip install -e .
+```
