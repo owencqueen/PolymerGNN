@@ -37,7 +37,7 @@ conda env create --name your_env_name --file polymergnn_env.yml
 ```
 This sets up all of the packages, and Owen has verified that it can be used on the ISAAC cluster.
 
-
+For more general setup instructions for external packages, please reference [conda-instructions.md](https://github.com/owencqueen/PolymerGNN/blob/main/conda-instructions.md).
 
 To install the polymerlearn package, use the following command:
 ```
