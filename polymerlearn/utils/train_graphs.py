@@ -271,7 +271,11 @@ def CV_eval(
 
                 # Predictions:
                 af = None if add_features is None else torch.tensor(add_features[i]).float()
+                if verbose > 1:
+                    print('Additional it={}'.format(i), af)
                 train_prediction = model(*make_like_batch(batch[i]), af)
+                if verbose > 1:
+                    print('pred', train_prediction.item())
                 train_predictions.append(train_prediction.clone().detach().item())
 
                 # Compute and backprop loss
@@ -280,6 +284,9 @@ def CV_eval(
                 loss.backward()
                 cum_loss += loss.item()
                 optimizer.step()
+
+            if verbose > 1:
+                print('Train predictions', train_predictions)
 
             # Test on validation:
             if use_val:
@@ -296,7 +303,7 @@ def CV_eval(
                 loss_list.append(cum_val_loss)
                 model.train() # Must switch back to train after eval
 
-            if e % 50 == 0 and (verbose == 1):
+            if e % 50 == 0 and (verbose >= 1):
                 print_str = f'Fold: {fold_count} \t Epoch: {e}, \
                     \t Train r2: {r2_score(Y, train_predictions):.4f} \t Train Loss: {cum_loss:.4f}' 
                 if use_val:

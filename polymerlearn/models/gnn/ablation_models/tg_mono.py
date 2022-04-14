@@ -22,6 +22,8 @@ class PolymerGNN_TgMono(torch.nn.Module):
         self.leaky1 = torch.nn.PReLU()
         self.fc2 = torch.nn.Linear(hidden_channels, 1)
 
+        self.mult_factor = torch.nn.Linear(hidden_channels, 1)
+
     def forward(self, Abatch: torch.Tensor, Gbatch: torch.Tensor, add_features: torch.Tensor):
         '''
         

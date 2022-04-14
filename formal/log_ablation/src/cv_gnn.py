@@ -4,7 +4,8 @@ import pandas as pd
 import numpy as np
 from tqdm import trange
 from polymerlearn.utils import get_IV_add, get_Tg_add, GraphDataset
-from polymerlearn.models.gnn import PolymerGNN_IV, PolymerGNN_Tg, PolymerGNN_Joint
+#from polymerlearn.models.gnn import PolymerGNN_IV, PolymerGNN_Tg, PolymerGNN_Joint
+from polymerlearn.models.gnn.no_log_models import PolymerGNN_IVnolog, PolymerGNN_Jointnolog, PolymerGNN_Tgnolog
 from polymerlearn.utils import train, CV_eval, get_add_properties
 from polymerlearn.utils import CV_eval_joint
 
@@ -99,12 +100,12 @@ if args.IV and args.Tg:
         'num_additional': 0 if args.noprop else add.shape[1], 
     }
 
-    model_gen = PolymerGNN_Joint
+    model_gen = PolymerGNN_Jointnolog
 
     # Cross validation function (with parameters):
     CV = partial(CV_eval_joint,
         dataset = dataset,
-        model_generator = PolymerGNN_Joint,
+        model_generator = model_gen,
         optimizer_generator = optimizer_gen,
         criterion = criterion,
         model_generator_kwargs = model_generator_kwargs,
@@ -132,6 +133,15 @@ elif args.IV: # we're predicting IV
         prop, use_log = build_transform_lists(args.properties)
         add = get_add_properties(data, prop, use_log)
 
+        print(list(add))
+
+        for i in range(len(add)):
+            if np.sum(np.isnan(add[i])) > 0:
+                print('NaN')
+                print('Index {}'.format(i))
+                print(add[i])
+                print('----------------') 
+
     dataset = GraphDataset(
         data = data,
         structure_dir = structure_dir,
@@ -146,7 +156,7 @@ elif args.IV: # we're predicting IV
         'num_additional': 0 if args.noprop else add.shape[1], 
     }
 
-    model_gen = PolymerGNN_IV
+    model_gen = PolymerGNN_IVnolog
 
     # Cross validation function (with hyperparameters)
     CV = partial(CV_eval, 
@@ -193,7 +203,7 @@ elif args.Tg: # We're predicting Tg:
         'num_additional': 0 if args.noprop else add.shape[1], 
     }
 
-    model_gen = PolymerGNN_Tg
+    model_gen = PolymerGNN_Tgnolog
 
     # Cross validation function (with hyperparameters)
     CV = partial(CV_eval, 
