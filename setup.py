@@ -1,6 +1,6 @@
 from distutils.core import setup
 
-reqs = open('requirements.txt', 'r').readlines()
+#reqs = open('requirements.txt', 'r').readlines()
 
 setup(
     name='polymerlearn',

@@ -11,7 +11,6 @@ from sklearn.model_selection import train_test_split, KFold
 
 from polymerlearn.utils.xyz2mol import int_atom, xyz2mol
 
-#def read_xyz_file(filename, look_for_charge=True):
 def read_xyz_file_top_conformer(filename, look_for_charge=True):
     """
     Reads an xyz file and parses the first conformer at the top
@@ -20,9 +19,6 @@ def read_xyz_file_top_conformer(filename, look_for_charge=True):
     atomic_symbols = []
     xyz_coordinates = []
     charge = 0
-    title = ""
-
-    all_atoms_charge_xyz = []
 
     with open(filename, "r") as file:
 
@@ -31,7 +27,6 @@ def read_xyz_file_top_conformer(filename, look_for_charge=True):
             if line_number == 0:
                 num_atoms = int(line)
             elif line_number == 1:
-                title = line
                 if "charge=" in line:
                     charge = int(line.split("=")[1])
             elif line_number >= num_atoms + 2:
@@ -284,14 +279,19 @@ class GraphDataset:
             each sample's final embedding before processing. These are GLOBAL features
             and are not per-atom features (TODO: make per-atom features).
         ac (tuple, len 2): Bottom and top bounds for all acids on the table given as
-            data. Must be column indices. 
+            data. Must be column indices.
         gc (tuple, len 2): Bottom and top bounds for all glycols on the table given as
-            data. Must be column indices. 
+            data. Must be column indices.
         test_size (float): Proportion of data to be used as testing data (if using 
             train/test split).
+        val_size (float): Proportion of the data to be used as validation data. If None,
+            does not make a validation split.
+        get_edge_attr (bool): Option to use predefined edge features on the graphs.
         bound_filter (list, length 2): Filters the dataset by some bound on Y value, 
             i.e. controls for outliers
             TODO: implementation for multiple Y values
+        exclude_inds (list of ints): List of indices to exclude in the dataframe.
+        device (str): Device name at which to run torch calculations on. Supports GPU.
     '''
 
     def __init__(self,
@@ -299,7 +299,6 @@ class GraphDataset:
             Y_target,
             structure_dir = base_structure_dir,
             add_features = None,
-            per_mol_features = None,
             ac = (20,33),
             gc = (34,46),
             test_size = 0.25,
@@ -477,6 +476,8 @@ class GraphDataset:
             the training data under one iteration of the Kfold_CV function. 
         
         Args:
+            folds (int): Number of folds for the cross validation.
+            val (bool): Should be set to True if using validation split.
             val_size (float, 0<=x<=1): Proportion of whole dataset that is used for
                 validation split on each fold.
 
