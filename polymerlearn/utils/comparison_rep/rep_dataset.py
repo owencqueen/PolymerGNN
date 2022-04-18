@@ -31,7 +31,7 @@ class RepDataset:
         self.add_features = add_features
 
         rep = rep.upper()
-        assert rep in ['CM', 'BOB', 'SOAP'], "Representation must be in ['CM', 'BOB', 'SOAP']"
+        assert rep in ['CM', 'MBTR', 'SOAP'], "Representation must be in ['CM', 'MBTR', 'SOAP']"
 
         Y = data.loc[:,Y_target]
         non_nan_mask = Y.notna()

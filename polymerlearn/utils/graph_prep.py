@@ -8,6 +8,7 @@ from torch_geometric.loader import DataLoader
 from torch_geometric.utils import to_networkx
 
 from sklearn.model_selection import train_test_split, KFold
+from sklearn.preprocessing import StandardScaler
 
 from polymerlearn.utils.xyz2mol import int_atom, xyz2mol
 
@@ -292,6 +293,14 @@ class GraphDataset:
             TODO: implementation for multiple Y values
         exclude_inds (list of ints): List of indices to exclude in the dataframe.
         device (str): Device name at which to run torch calculations on. Supports GPU.
+        standard_scale (bool, optional): Whether to perform standard scaling for the 
+            add_features at split time. Cannot be done as a preprocessing step (i.e. 
+            incorporated to add_features) because the scales should depend only on trainig
+            data. Therefore, scaling parameters must be recomputed at each split. 
+            Default False.
+        ss_mask (list/ndarray of bools): Mask over the variables that need to be standard
+            scaled. May be used if you want to scale some variables (like AN, OHN) but not
+            others (like Mw).
     '''
 
     def __init__(self,
@@ -307,6 +316,8 @@ class GraphDataset:
             bound_filter = None,
             exclude_inds = None,
             device = None,
+            standard_scale = False,
+            ss_mask = None,
         ):
 
         self.add_features = add_features
@@ -314,6 +325,8 @@ class GraphDataset:
         self.val_size = val_size
         self.test_size = test_size
         self.device = device
+        self.standard_scale = standard_scale
+        self.ss_mask = None
         if self.add_features is not None:
             if self.add_features.ndim == 1:
                 self.add_features = self.add_features[:, np.newaxis] # Turn to column vector
@@ -416,6 +429,9 @@ class GraphDataset:
             val_mask = None
 
         self.split_by_indices(train_mask=train_mask, test_mask=test_mask, val_mask=val_mask)
+
+        # if self.standard_scale:
+        #     add_features = np.array(self.add_features)
 
     def get_train_batch(self, size: int):
         '''
@@ -570,6 +586,33 @@ class GraphDataset:
             self.add_test = [self.add_features[int(i)] for i in test_mask]
             if self.val_mask is not None:
                 self.add_val = [self.add_features[int(i)] for i in val_mask]
+
+            if self.standard_scale:
+                if self.ss_mask is not None:
+                    self.add_train = np.array(self.add_train)
+                    self.add_test = np.array(self.add_test)
+
+                    # Scale only the variables masked in by the ss_mask:
+                    ss = StandardScaler().fit(self.add_train[:,self.ss_mask])
+                    self.add_train[:,self.ss_mask] = ss.transform(self.add_train[:,self.ss_mask])
+                    self.add_test[:,self.ss_mask] = ss.transform(self.add_test[:,self.ss_mask])
+
+                    if self.val_mask is not None:
+                        self.add_val[:,self.ss_mask] = ss.transform(self.add_val[:,self.ss_mask]) 
+                        self.add_val = list(self.add_val)
+
+                    self.add_train = list(self.add_train)
+                    self.add_test = list(self.add_test)
+
+                else:
+                    # Standard scale based on new split
+                    ss = StandardScaler().fit(np.array(self.add_train))
+                    #   Fit to only training data, as is customary
+                    self.add_train = list(ss.transform(self.add_train))
+                    self.add_test = list(ss.transform(self.add_test))
+                    if self.val_mask is not None:
+                        self.add_val = list(ss.transform(self.add_val))
+
         else:
             self.add_train = None
             self.add_test = None

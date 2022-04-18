@@ -13,7 +13,6 @@ parser.add_argument('--num_cv', type = int, required = True,
     help = 'Number of cross validations')
 parser.add_argument('--rep', type = str)
 parser.add_argument('--target', type = str)
-parser.add_argument('--num_cv', type = int)
 parser.add_argument('--start_fold', required = True, type = int,
     help = 'Starting fold number. i.e. we could have 5 folds, 30-34, this number would be 30. Used for parallelization of the job script.')
 parser.add_argument('--results_save_dir', type = str, 
@@ -23,7 +22,7 @@ parser.add_argument('--results_save_dir', type = str,
 
 args = parser.parse_args()
 
-assert args.rep in ['CM', 'BOB', 'SOAP']
+assert args.rep in ['CM', 'MBTR', 'SOAP']
 assert args.target in ['Tg', 'IV']
 
 data = pd.read_csv('../../dataset/pub_data.csv')

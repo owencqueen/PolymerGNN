@@ -24,6 +24,8 @@ def get_vector(
         fill_value (float, optional): Value with which to fill missing values 
             in the column. If `None`, will fill missing values with median from
             the column. (:default: :obj:`None`) 
+        use_log (bool): Log transforms the values if true
+        standard_scale (bool): 
 
     :rtype: pd.Series
     '''

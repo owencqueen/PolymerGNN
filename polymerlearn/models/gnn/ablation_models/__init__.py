@@ -1,3 +1,7 @@
 from .iv_mono import PolymerGNN_IVMono
 from .tg_mono import PolymerGNN_TgMono
 from .joint_mono import PolymerGNN_JointMono 
+
+from .single_pool.iv_mono_onepool import PolymerGNN_IVMono_SinglePool as PolymerGNN_IV_SP
+from .single_pool.tg_mono_onepool import PolymerGNN_TgMono_SinglePool as PolymerGNN_Tg_SP
+from .single_pool.joint_mono_onepool import PolymerGNN_jointMono_SinglePool as PolymerGNN_joint_SP
