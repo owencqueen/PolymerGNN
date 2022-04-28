@@ -2,6 +2,43 @@ import os, pickle, argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
+def get_r2_mae(path):
+    r2 = []
+    mae = []
+    count = 0
+
+    for f in os.listdir(path):
+        if f[-6:] != 'pickle':
+            continue
+        r2_score, mae_score = pickle.load(open(os.path.join(path, f), 'rb'))
+        r2.append(np.mean(r2_score))
+        mae.append(np.mean(mae_score))
+
+        count += 1
+
+    return r2, mae, count
+
+def get_r2_mae_joint(path):
+    r2IV = []
+    maeIV = []
+    r2Tg = []
+    maeTg = []
+    count = 0
+
+    for f in os.listdir(path):
+        if f[-6:] != 'pickle':
+            continue
+        result_dict = pickle.load(open(os.path.join(path, f), 'rb'))
+
+        r2IV.append(result_dict['IV'][0])
+        maeIV.append(result_dict['IV'][1])
+        r2Tg.append(result_dict['Tg'][0])
+        maeTg.append(result_dict['Tg'][1])
+
+        count += 1
+
+    return r2IV, maeIV, r2Tg, maeTg, count
+
 def summarize(path):
 
     r2 = []

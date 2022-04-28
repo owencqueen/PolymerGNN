@@ -130,6 +130,8 @@ def prepare_dataloader_graph_AG(
             corresponding to numerical values to add to the Data objects in the
             DataLoader.
         add_G (dict of lists, optional): Same as add_A but for glycols.
+        atom_feat (Callable[[RdKit.Mol], torch.Tensor], optional): Function to output the 
+            feature matrix for a given molecule.
     '''
 
     if atom_feat == None:

@@ -131,7 +131,7 @@ def get_one_top_xyz(filename):
 def screen_build(all_AG, 
         xyz_loc = '../../../Structures/AG/xyz', 
         rep_dir_loc = '../../../Representations',
-        reps_to_screen = ['CM', 'SOAP', 'BOB']):
+        reps_to_screen = ['MBTR']):
     '''
     Screens all acids/glycols in a dataframe, builds representations of a given type
     '''
