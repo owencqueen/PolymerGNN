@@ -114,7 +114,8 @@ def prepare_dataloader_graph_AG(
         add_A = None, 
         add_G = None, 
         get_edge_attr = False,
-        device = None):
+        device = None,
+        atom_feat=None):
     '''
     Prepares a dataloader given a list of molecules
 
@@ -131,6 +132,9 @@ def prepare_dataloader_graph_AG(
         add_G (dict of lists, optional): Same as add_A but for glycols.
     '''
 
+    if atom_feat == None:
+        atom_feat = get_atom_features
+
     assert len(A_mol_list) == len(G_mol_list), 'A and G mol (RDKit) lists not same length'
 
     # Cite: C
@@ -143,7 +147,7 @@ def prepare_dataloader_graph_AG(
         acid_graphs = []
         j = 0 # Counts total number of acids for this sample
         for Amol in Amols:
-            Ax = get_atom_features(Amol)
+            Ax = atom_feat(Amol)
             if get_edge_attr:
                 Aedge_index, Aedge_attr = get_edge_index(Amol, get_edge_attr=True)
             else:
@@ -172,7 +176,7 @@ def prepare_dataloader_graph_AG(
         glycol_graphs = []
         j = 0 # Counts total number of glycols for this sample
         for Gmol in Gmols:
-            Gx = get_atom_features(Gmol)
+            Gx = atom_feat(Gmol)
 
             if get_edge_attr:
                 Gedge_index, Gedge_attr = get_edge_index(Gmol, get_edge_attr=True)
@@ -229,7 +233,7 @@ def get_AG_info(data, ac = (20,33), gc = (34,46)):
 
         # Add to percentage lists:
         acid_pcts.append(data.iloc[i,ac[0]:ac[1]][acid_hit].tolist())
-        glycol_pcts.append(data.iloc[i,gc[0]:gc[1]][glycol_hit].tolist()) 
+        glycol_pcts.append(data.iloc[i,gc[0]:gc[1]][glycol_hit].tolist())
 
         acid_pos = acid_names[np.argwhere(acid_hit).flatten()].tolist()
         glycol_pos = glycol_names[np.argwhere(glycol_hit).flatten()].tolist()
