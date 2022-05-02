@@ -1,5 +1,7 @@
 # Guide to Experiments
 
+This directory contains all the code for formal experiments that appear within the results of the paper. They include slurm scripts to submit jobs on the UTK clusters and cross-validate every experiment.
+
 
 | Syntax      | Description |
 | ----------- | ----------- |
