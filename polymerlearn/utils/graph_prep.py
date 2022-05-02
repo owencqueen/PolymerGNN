@@ -215,9 +215,23 @@ def get_AG_info(data, ac = (20,33), gc = (34,46)):
     Gets acid/glycol info from a dataframe containing input in the Eastman fashion
     '''
 
+    ac_tuple = False
+    gc_tuple = False
+    if type(ac) == tuple:
+        ac_tuple = True
+    
+    if type(gc) == tuple:
+        gc_tuple = True
+
     # Decompose the data into included names
-    acid_names = pd.Series([c[1:] for c in data.columns[ac[0]:ac[1]].tolist()])
-    glycol_names = pd.Series([c[1:] for c in data.columns[gc[0]:gc[1]].tolist()])
+    if ac_tuple:
+        acid_names = pd.Series([c[1:] for c in data.columns[ac[0]:ac[1]].tolist()])
+    else:
+        acid_names = pd.Series([c[1:] for c in data[ac].columns.tolist()])
+    if gc_tuple:     
+        glycol_names = pd.Series([c[1:] for c in data.columns[gc[0]:gc[1]].tolist()])
+    else:
+        glycol_names = pd.Series([c[1:] for c in data[gc].columns.tolist()])
 
     # Holds all names of acids and glycols
     acid_included = []
@@ -230,12 +244,24 @@ def get_AG_info(data, ac = (20,33), gc = (34,46)):
     # Get relevant names and percentages of acid/glycols
     for i in range(data.shape[0]):
 
-        acid_hit = (data.iloc[i,ac[0]:ac[1]].to_numpy() > 0)
-        glycol_hit = (data.iloc[i,gc[0]:gc[1]].to_numpy() > 0)
+        if ac_tuple:
+            acid_hit = (data.iloc[i,ac[0]:ac[1]].to_numpy() > 0)
+        else:
+            acid_hit = (data[ac].iloc[i].to_numpy() > 0)
+        if gc_tuple:
+            glycol_hit = (data.iloc[i,gc[0]:gc[1]].to_numpy() > 0)
+        else:
+            glycol_hit = (data[gc].iloc[i].to_numpy() > 0)
 
         # Add to percentage lists:
-        acid_pcts.append(data.iloc[i,ac[0]:ac[1]][acid_hit].tolist())
-        glycol_pcts.append(data.iloc[i,gc[0]:gc[1]][glycol_hit].tolist())
+        if ac_tuple:
+            acid_pcts.append(data.iloc[i,ac[0]:ac[1]][acid_hit].tolist())
+        else:
+            acid_pcts.append(data[ac].iloc[i][acid_hit].tolist())
+        if gc_tuple:
+            glycol_pcts.append(data.iloc[i,gc[0]:gc[1]][glycol_hit].tolist())
+        else:
+            glycol_pcts.append(data[gc].iloc[i][glycol_hit].tolist())
 
         acid_pos = acid_names[np.argwhere(acid_hit).flatten()].tolist()
         glycol_pos = glycol_names[np.argwhere(glycol_hit).flatten()].tolist()
@@ -287,8 +313,10 @@ class GraphDataset:
             and are not per-atom features (TODO: make per-atom features).
         ac (tuple, len 2): Bottom and top bounds for all acids on the table given as
             data. Must be column indices.
+        ac (list, str): List of columns for all acids
         gc (tuple, len 2): Bottom and top bounds for all glycols on the table given as
             data. Must be column indices.
+        gc (list, str): List of columns for all glycols
         test_size (float): Proportion of data to be used as testing data (if using 
             train/test split).
         val_size (float): Proportion of the data to be used as validation data. If None,
@@ -337,9 +365,25 @@ class GraphDataset:
             if self.add_features.ndim == 1:
                 self.add_features = self.add_features[:, np.newaxis] # Turn to column vector
 
+        if type(ac) == tuple:
+            self.ac_tuple = True
+        else:
+            self.ac_tuple = False
+        
+        if type(gc) == tuple:
+            self.gc_tuple = True
+        else:
+            self.gc_tuple = False
+        
         # Decompose the data into included names
-        self.acid_names = pd.Series([c[1:] for c in data.columns[ac[0]:ac[1]].tolist()])
-        self.glycol_names = pd.Series([c[1:] for c in data.columns[gc[0]:gc[1]].tolist()])
+        if self.ac_tuple:
+            self.acid_names = pd.Series([c[1:] for c in data.columns[ac[0]:ac[1]].tolist()])
+        else:
+            self.acid_names = pd.Series([c[1:] for c in data[ac].columns.tolist()])
+        if self.gc_tuple:     
+            self.glycol_names = pd.Series([c[1:] for c in data.columns[gc[0]:gc[1]].tolist()])
+        else:
+            self.glycol_names = pd.Series([c[1:] for c in data[gc].columns.tolist()])
 
         # Holds all names of acids and glycols
         acid_included = []
@@ -352,12 +396,24 @@ class GraphDataset:
         # Get relevant names and percentages of acid/glycols
         for i in range(data.shape[0]):
 
-            acid_hit = (data.iloc[i,ac[0]:ac[1]].to_numpy() > 0)
-            glycol_hit = (data.iloc[i,gc[0]:gc[1]].to_numpy() > 0)
+            if self.ac_tuple:
+                acid_hit = (data.iloc[i,ac[0]:ac[1]].to_numpy() > 0)
+            else:
+                acid_hit = (data[ac].iloc[i].to_numpy() > 0)
+            if self.gc_tuple:
+                glycol_hit = (data.iloc[i,gc[0]:gc[1]].to_numpy() > 0)
+            else:
+                glycol_hit = (data[gc].iloc[i].to_numpy() > 0)
 
             # Add to percentage lists:
-            acid_pcts.append(data.iloc[i,ac[0]:ac[1]][acid_hit].tolist())
-            glycol_pcts.append(data.iloc[i,gc[0]:gc[1]][glycol_hit].tolist()) 
+            if self.ac_tuple:
+                acid_pcts.append(data.iloc[i,ac[0]:ac[1]][acid_hit].tolist())
+            else:
+                acid_pcts.append(data[ac].iloc[i][acid_hit].tolist())
+            if self.gc_tuple:
+                glycol_pcts.append(data.iloc[i,gc[0]:gc[1]][glycol_hit].tolist())
+            else:
+                glycol_pcts.append(data[gc].iloc[i][glycol_hit].tolist())
 
             acid_pos = self.acid_names[np.argwhere(acid_hit).flatten()].tolist()
             glycol_pos = self.glycol_names[np.argwhere(glycol_hit).flatten()].tolist()
