@@ -72,4 +72,4 @@ class PolymerGNN_SchNet_IV(torch.nn.Module):
         x = self.fc2(x)
 
         # Because we're predicting log:
-        return torch.exp(x)
+        return x

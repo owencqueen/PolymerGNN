@@ -17,15 +17,15 @@ class PolymerGNN_IV_evidential(torch.nn.Module):
             (SAGPooling(hidden_channels), 'x, edge_index, batch=batch -> x'),
         ])
 
-        self.Gsage = Sequential('x, edge_index, batch', [
-            (GATConv(input_feat, hidden_channels, aggr = 'max'), 'x, edge_index -> x'),
-            BatchNorm(hidden_channels, track_running_stats=False),
-            torch.nn.PReLU(),
-            (SAGEConv(hidden_channels, hidden_channels, aggr = 'max'), 'x, edge_index -> x'),
-            BatchNorm(hidden_channels, track_running_stats=False),
-            torch.nn.PReLU(),
-            (SAGPooling(hidden_channels), 'x, edge_index, batch=batch -> x'),
-        ])
+        # self.Gsage = Sequential('x, edge_index, batch', [
+        #     (GATConv(input_feat, hidden_channels, aggr = 'max'), 'x, edge_index -> x'),
+        #     BatchNorm(hidden_channels, track_running_stats=False),
+        #     torch.nn.PReLU(),
+        #     (SAGEConv(hidden_channels, hidden_channels, aggr = 'max'), 'x, edge_index -> x'),
+        #     BatchNorm(hidden_channels, track_running_stats=False),
+        #     torch.nn.PReLU(),
+        #     (SAGPooling(hidden_channels), 'x, edge_index, batch=batch -> x'),
+        # ])
 
         self.fc1 = torch.nn.Linear(hidden_channels * 2 + num_additional, hidden_channels)
         self.leaky1 = torch.nn.PReLU()
@@ -40,7 +40,7 @@ class PolymerGNN_IV_evidential(torch.nn.Module):
         # Decompose X into acid and glycol
 
         Aembeddings = self.Asage(Abatch.x, Abatch.edge_index, Abatch.batch)[0]
-        Gembeddings = self.Gsage(Gbatch.x, Gbatch.edge_index, Gbatch.batch)[0]
+        Gembeddings = self.Asage(Gbatch.x, Gbatch.edge_index, Gbatch.batch)[0]
 
         # self.saveA_embed = Aembed.clone()
         # self.saveG_embed = Gembed.clone()
@@ -57,10 +57,10 @@ class PolymerGNN_IV_evidential(torch.nn.Module):
         x = self.leaky1(self.fc1(poolAgg))
 
         # Unpack last layer:
-        loggamma, logv, logalpha, logbeta = self.fc2(x).squeeze()
+        gamma, logv, logalpha, logbeta = self.fc2(x).squeeze()
 
         # Because we predict log, exp transform gamma:
-        gamma = torch.exp(loggamma)
+        #gamma = torch.exp(loggamma)
         # KEEP IN MIND: may need to alter distribution b/c exp of gamma
 
         # Activate all other parameters:

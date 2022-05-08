@@ -90,7 +90,7 @@ class RepDataset:
 
             i += 1
 
-        return pooled
+        return np.asarray(pooled)
 
     def cross_val_predict(self, model, pool_method = np.sum, verbose = 0, shuf = True, folds = 5):
         X = self.pool_dataset(pool_method)
@@ -106,20 +106,22 @@ class RepDataset:
         mae_scores = []
 
         for train_idx, test_idx in kf.split(X):
-            X_train, X_test = X[train_index], X[test_index]
-            y_train, y_test = y[train_index], y[test_index]
+            #print(train_idx)
+            X_train, X_test = X[train_idx], X[test_idx]
+            y_train, y_test = y[train_idx], y[test_idx]
 
             if self.standard_scale:
-                # Scale X values:
-                ss = StandardScaler().fit(np.array(X_train))
-                X_train = ss.transform(X_train)
-                X_test = ss.transform(X_test)
+                endlen = np.asarray(self.add_features).shape[1]
+                # Scale only additional values:
+                ss = StandardScaler().fit(np.array(X_train[:,-endlen:]))
+                X_train[:,-endlen:] = ss.transform(X_train[:,-endlen:])
+                X_test[:,-endlen:] = ss.transform(X_test[:,-endlen:])
 
-            M = model()
+            #M = model.copy()
 
-            M.fit(X_train, y_train)
+            model.fit(X_train, y_train)
 
-            yhat = M.predict(X_test)
+            yhat = model.predict(X_test)
             r2_scores.append(R2(y_test, yhat))
             mae_scores.append(MAE(y_test, yhat))
 

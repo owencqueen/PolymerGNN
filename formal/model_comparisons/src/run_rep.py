@@ -7,6 +7,7 @@ from tqdm import trange
 
 from polymerlearn.utils.comparison_rep.rep_dataset import RepDataset
 from polymerlearn.utils.train_graphs import get_IV_add, get_Tg_add
+from polymerlearn.utils.train_graphs import get_IV_add_nolog, get_Tg_add_nolog
 
 
 parser = argparse.ArgumentParser()
@@ -19,6 +20,8 @@ parser.add_argument('--start_fold', required = True, type = int,
 parser.add_argument('--results_save_dir', type = str, 
     help = 'Directory in which to save results as we evaluate folds in the CV.',
     default = None)
+parser.add_argument('--standard_scale', action = 'store_true', 
+    help = 'If included, standard scale all variables before input')
 #parser.add_argument('--Tg', action = 'store_true')
 
 args = parser.parse_args()
@@ -27,7 +30,10 @@ assert args.rep in ['CM', 'MBTR', 'SOAP']
 assert args.target in ['Tg', 'IV']
 
 data = pd.read_csv('../../dataset/pub_data.csv')
-add_features = get_IV_add(data) if args.target == 'IV' else get_Tg_add(data)
+if args.standard_scale:
+    add_features = get_IV_add_nolog(data) if args.target == 'IV' else get_Tg_add_nolog(data)
+else:
+    add_features = get_IV_add(data) if args.target == 'IV' else get_Tg_add(data)
 
 name = 'IV_results_fold={}.pickle' if args.target == 'IV' else 'Tg_results_fold={}.pickle'
 
@@ -36,7 +42,8 @@ dataset = RepDataset(
     Y_target = args.target,
     rep_dir = os.path.join('../../Representations'),
     add_features = add_features,
-    rep = args.rep
+    rep = args.rep,
+    standard_scale=args.standard_scale,
 )
 
 def save_to_loc(obj, cur_name):

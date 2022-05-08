@@ -61,7 +61,7 @@ parser.add_argument('--cv_verbose', default = 0, type = int,
     help = 'Level of verbosity for cross validation function (see Python documentation).')
 parser.add_argument('--noprop', action = 'store_true',
     help = 'If included, includes no additional resin properties')
-parser.add_argument('--standard_scale', action = 'store_true')
+#parser.add_argument('--standard_scale', action = 'store_true')
 
 args = parser.parse_args()
 
@@ -178,7 +178,8 @@ elif args.IV: # we're predicting IV
         use_val = False,
         get_scores = True,
         device = device,
-        save_state_dicts = True
+        save_state_dicts = True,
+        #standard_scale = True,
     )
 
 elif args.Tg: # We're predicting Tg:

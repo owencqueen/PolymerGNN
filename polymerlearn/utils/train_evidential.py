@@ -32,6 +32,7 @@ def CV_eval_evidential(
         verbose = 1,
         epochs = 1000,
         use_val = False,
+        get_scores = False,
         val_size = 0.1,
         stop_option = 0,
         early_stop_delay = 100):
@@ -159,5 +160,20 @@ def CV_eval_evidential(
     print('Final avg. r2: ', np.mean(r2_test_per_fold))
     print('Final avg. MSE:', np.mean(mse_test_per_fold))
     print('Final avg. MAE:', np.mean(mae_test_per_fold))
+
+    r2_avg = np.mean(r2_test_per_fold)
+    mae_avg = np.mean(mae_test_per_fold)
+
+    big_ret_dict = {
+        'r2': r2_avg,
+        'mae': mae_avg,
+        'all_predictions': all_predictions,
+        'all_y': all_y,
+        'all_reference_inds': all_reference_inds,
+        #'model_state_dicts': model_state_dicts
+    }
+
+    if get_scores:
+        return big_ret_dict
 
     return all_predictions, all_y, all_reference_inds

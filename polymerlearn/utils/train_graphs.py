@@ -59,8 +59,24 @@ def get_IV_add(data):
 
     return add
 
+def get_IV_add_nolog(data):
+    mw_vector = get_vector(data, prop = 'Mw (PS)', use_log = False).to_numpy()
+    an_vector = get_vector(data, prop = 'AN', use_log = False).to_numpy()
+    ohn_vector = get_vector(data, prop = 'OHN', use_log = False).to_numpy()
+    tmp_vector = get_vector(data, prop = '%TMP', fill_value=0).to_numpy()
+
+    add = np.stack([mw_vector, an_vector, ohn_vector, tmp_vector]).T
+    return add
+
 def get_Tg_add(data):
     mw_vector = get_vector(data, prop = 'Mw (PS)', use_log = True).to_numpy()
+
+    add = np.stack([mw_vector]).T
+
+    return add
+
+def get_Tg_add_nolog(data):
+    mw_vector = get_vector(data, prop = 'Mw (PS)', use_log = False).to_numpy()
 
     add = np.stack([mw_vector]).T
 

@@ -12,7 +12,7 @@ IV_paths = [
     '../model_comparisons/CM/iv',
     '../model_comparisons/MBTR/iv',
     '../model_comparisons/SOAP/iv',
-    '../ss_ablation/saved_scores/iv',
+    '../arch_ablation/saved_scores/iv',
     '../performance/saved_scores/joint'
 ]
 
@@ -23,6 +23,8 @@ tg_paths = [
     '../ss_ablation/saved_scores/tg',
     '../performance/saved_scores/joint'
 ]
+
+FIGSIZE = (6, 4)
 
 def ridgeline(data, overlap=0, fill=True, labels=None, n_points=150, sep = 200, color = None):
     """
@@ -168,15 +170,17 @@ def plot_IV():
 
     plt.rcParams["font.family"] = "serif"
     plt.rcParams.update({'font.size': 12})
-    plt.figure(figsize=(8.6,5))
+    plt.figure(figsize=FIGSIZE)
     ridgeline(r2, overlap =0, fill = 'y', sep = 30,
         labels = lab, color = c)
     plt.xlabel('$R^2$')
+    plt.tight_layout()
     plt.show()
-    plt.figure(figsize=(8.6,5))
+    plt.figure(figsize=FIGSIZE)
     ridgeline(mae, overlap =0, fill = 'y', sep = 250,
         labels = lab, color = c)
     plt.xlabel('MAE')
+    plt.tight_layout()
     plt.show()
 
 def plot_Tg():
@@ -230,15 +234,17 @@ def plot_Tg():
 
     plt.rcParams["font.family"] = "serif"
     plt.rcParams.update({'font.size': 12})
-    plt.figure(figsize=(8.6,5))
+    plt.figure(figsize=FIGSIZE)
     ridgeline(r2, overlap =0, fill = 'y', sep = 10,
         labels = lab, color = c)
     plt.xlabel('$R^2$')
+    plt.tight_layout()
     plt.show()
-    plt.figure(figsize=(8.6,5))
+    plt.figure(figsize=FIGSIZE)
     ridgeline(mae, overlap =0, fill = 'y', sep = 0.5,
         labels = lab, color = c)
     plt.xlabel('MAE')
+    plt.tight_layout()
     plt.show()
 
 if __name__ == '__main__':
