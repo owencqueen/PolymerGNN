@@ -2,6 +2,7 @@ import argparse, os, pickle
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.kernel_ridge import KernelRidge
 from tqdm import trange
 
 from polymerlearn.utils.comparison_rep.rep_dataset import RepDataset
@@ -44,7 +45,7 @@ def save_to_loc(obj, cur_name):
 for i in trange(args.num_cv):
 
     # Use RF for all
-    model = RandomForestRegressor()
+    model = KernelRidge()
     r2, mae = dataset.cross_val_predict(model)
 
     fold = i + args.start_fold

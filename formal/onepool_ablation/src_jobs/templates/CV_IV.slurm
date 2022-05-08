@@ -19,4 +19,5 @@ python3 src/mono_graph.py \
 --properties default \
 --results_save_dir $base/saved_scores/iv \
 --start_fold CVNUM \
+--standard_scale \
 --cv_verbose 0

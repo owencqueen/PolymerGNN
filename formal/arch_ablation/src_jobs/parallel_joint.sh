@@ -1,4 +1,4 @@
-base="/lustre/isaac/scratch/oqueen/PolymerGNN/formal/onepool_ablation"
+base="/lustre/isaac/scratch/oqueen/PolymerGNN/formal/arch_ablation"
 
 for i in {0..49}
     do

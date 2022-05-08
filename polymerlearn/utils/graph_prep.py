@@ -210,6 +210,41 @@ def prepare_dataloader_graph_AG(
 
     return data_list
 
+def graph_dataloader_z_pos(
+        A_charge_coords, 
+        G_charge_coords,
+        Y,
+    ):
+    '''
+    Gets dataloader by nuclear charges (z) and positions (pos)
+    - Useful for SchNet architecture
+    '''
+
+    data_list = []
+
+    for A, G in zip(A_charge_coords, G_charge_coords):
+        # List all atoms and their coordinates:
+        acid_data_list = []
+        for z, pos in A:
+            adata = Data(
+                z = torch.as_tensor(z).long(),
+                pos = torch.as_tensor(pos),
+            )
+            acid_data_list.append(adata)
+
+        glycol_data_list = []
+        for z, pos in G:
+            gdata = Data(
+                z = torch.as_tensor(z).long(),
+                pos = torch.as_tensor(pos),
+            )
+            glycol_data_list.append(gdata)
+            
+        data_list.append((acid_data_list, glycol_data_list))
+
+    return data_list
+
+
 def get_AG_info(data, ac = (20,33), gc = (34,46)):
     '''
     Gets acid/glycol info from a dataframe containing input in the Eastman fashion
@@ -352,6 +387,7 @@ class GraphDataset:
             device = None,
             standard_scale = False,
             ss_mask = None,
+            z_pos_loaders = False
         ):
 
         self.add_features = add_features
@@ -361,6 +397,7 @@ class GraphDataset:
         self.device = device
         self.standard_scale = standard_scale
         self.ss_mask = None
+        self.z_pos_loaders = z_pos_loaders
         if self.add_features is not None:
             if self.add_features.ndim == 1:
                 self.add_features = self.add_features[:, np.newaxis] # Turn to column vector
@@ -426,14 +463,33 @@ class GraphDataset:
         self.acid_mols = []
         self.glycol_mols = []
 
-        for i in range(len(acid_included)):
-            self.acid_mols.append(
-                [convert_xyz_to_mol(os.path.join(structure_dir, acid_included[i][j] + '.xyz')) for j in range(len(acid_included[i]))]
-            )
+        if self.z_pos_loaders: # Load the Z-pos structure
 
-            self.glycol_mols.append(
-                [convert_xyz_to_mol(os.path.join(structure_dir, glycol_included[i][j] + '.xyz')) for j in range(len(glycol_included[i]))]
-            )
+            for i in range(len(acid_included)):
+                A_sub = []
+                for j in range(len(acid_included[i])):
+                    Acharge, _, Acoords = read_xyz_file_top_conformer(os.path.join(structure_dir, acid_included[i][j] + '.xyz'))
+                    A_sub.append((Acharge, Acoords))
+
+                self.acid_mols.append(A_sub)
+
+                G_sub = []
+                for j in range(len(glycol_included[i])):
+                    Gcharge, _, Gcoords = read_xyz_file_top_conformer(os.path.join(structure_dir, glycol_included[i][j] + '.xyz'))
+                    G_sub.append((Acharge, Acoords))
+                
+                self.glycol_mols.append(G_sub)
+
+        else:
+
+            for i in range(len(acid_included)):
+                self.acid_mols.append(
+                    [convert_xyz_to_mol(os.path.join(structure_dir, acid_included[i][j] + '.xyz')) for j in range(len(acid_included[i]))]
+                )
+
+                self.glycol_mols.append(
+                    [convert_xyz_to_mol(os.path.join(structure_dir, glycol_included[i][j] + '.xyz')) for j in range(len(glycol_included[i]))]
+                )
 
         # Set Y (target)
         Y = data.loc[:,Y_target]
@@ -593,11 +649,15 @@ class GraphDataset:
         mask_Amols = [self.acid_mols[int(i)] for i in mask]
         mask_Gmols = [self.glycol_mols[int(i)] for i in mask]
 
-        add_A = {'pct': [self.acid_pcts[i] for i in mask]}
-        add_G = {'pct': [self.glycol_pcts[i] for i in mask]}
 
-        data = prepare_dataloader_graph_AG(mask_Amols, mask_Gmols, Ymask,
-                        add_A = add_A, add_G = add_G, device = self.device)
+        if self.z_pos_loaders:
+            data = graph_dataloader_z_pos(mask_Amols, mask_Gmols, Ymask)
+        else:
+            add_A = {'pct': [self.acid_pcts[i] for i in mask]}
+            add_G = {'pct': [self.glycol_pcts[i] for i in mask]}
+
+            data = prepare_dataloader_graph_AG(mask_Amols, mask_Gmols, Ymask,
+                            add_A = add_A, add_G = add_G, device = self.device)
 
         return data
 
@@ -691,10 +751,21 @@ def test_xyz2mol():
 
 def test_dataset():
 
-    data = pd.read_csv(os.path.join('/Users/owenqueen/Desktop/Eastman_Project-Confidential/Eastman_Project/CombinedData', 
-            'combined_data.csv'))
+    data = pd.read_csv('../../dataset/pub_data.csv')
 
-    dataset = GraphDataset(data = data, Y_target=['IV'])
+    print(data)
+
+    base_structure_dir = os.path.join('..', '..',
+        'Structures',
+        'AG',
+        'xyz'
+    )
+
+    dataset = GraphDataset(data = data, Y_target=['IV'], z_pos_loaders = True,
+        structure_dir = base_structure_dir)
+
+    print(dataset)
 
 if __name__ == '__main__':
+
     test_dataset()
