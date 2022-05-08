@@ -4,7 +4,9 @@ import numpy as np
 import pandas as pd
 
 from polymerlearn.utils.graph_prep import get_AG_info, list_mask
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score, train_test_split, KFold
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import r2_score as R2, mean_absolute_error as MAE
 from sklearn.utils import shuffle
 
 base_rep_dir = os.path.join('../../..',
@@ -26,9 +28,11 @@ class RepDataset:
             gc = (34,46),
             #test_size = 0.25,
             rep = 'CM',
+            standard_scale = False,
         ):
 
         self.add_features = add_features
+        self.standard_scale = standard_scale
 
         rep = rep.upper()
         assert rep in ['CM', 'MBTR', 'SOAP'], "Representation must be in ['CM', 'MBTR', 'SOAP']"
@@ -76,8 +80,8 @@ class RepDataset:
         pooled = []
         i = 0
         for A, G in self.dataset:
-            poolA = np.sum(np.stack(A), axis = 0)
-            poolG = np.sum(np.stack(G), axis = 0)
+            poolA = np.max(np.stack(A), axis = 0)
+            poolG = np.max(np.stack(G), axis = 0)
             if self.add_features is not None:
                 toconcat_list = [poolA.flatten(), poolG.flatten(), self.add_features[i]]
             else:
@@ -88,7 +92,7 @@ class RepDataset:
 
         return pooled
 
-    def cross_val_predict(self, model, pool_method = np.sum, verbose = 0, shuf = False):
+    def cross_val_predict(self, model, pool_method = np.sum, verbose = 0, shuf = True, folds = 5):
         X = self.pool_dataset(pool_method)
 
         if shuf:
@@ -96,8 +100,31 @@ class RepDataset:
         else:
             y = self.Y
 
-        r2_scores = cross_val_score(model, X, y, verbose = verbose, scoring = 'r2')
-        mae_scores = -1.0 * cross_val_score(model, X, y, verbose = verbose, scoring = 'neg_mean_absolute_error')
+        kf = KFold(n_splits = folds)
+
+        r2_scores = []
+        mae_scores = []
+
+        for train_idx, test_idx in kf.split(X):
+            X_train, X_test = X[train_index], X[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+
+            if self.standard_scale:
+                # Scale X values:
+                ss = StandardScaler().fit(np.array(X_train))
+                X_train = ss.transform(X_train)
+                X_test = ss.transform(X_test)
+
+            M = model()
+
+            M.fit(X_train, y_train)
+
+            yhat = M.predict(X_test)
+            r2_scores.append(R2(y_test, yhat))
+            mae_scores.append(MAE(y_test, yhat))
+
+        #r2_scores = cross_val_score(model, X, y, verbose = verbose, scoring = 'r2')
+        #mae_scores = -1.0 * cross_val_score(model, X, y, verbose = verbose, scoring = 'neg_mean_absolute_error')
         #scores = cross_val
 
         return r2_scores, mae_scores
