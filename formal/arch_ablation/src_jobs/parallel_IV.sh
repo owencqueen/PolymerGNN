@@ -1,6 +1,6 @@
 base="/lustre/isaac/scratch/oqueen/PolymerGNN/formal/arch_ablation"
 
-for i in {0..49}
+for i in {0..19}
     do
         cp $base/src_jobs/templates/CV_IV.slurm $base/src_jobs/CV_IV_$i.slurm
 

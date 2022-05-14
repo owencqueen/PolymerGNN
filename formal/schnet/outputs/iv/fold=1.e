@@ -21,4 +21,4 @@ IMPORTANT: You may need to close and restart your shell after running 'conda ini
   acid_hit = (data.iloc[i,ac[0]:ac[1]].to_numpy() > 0)
 /lustre/isaac/scratch/oqueen/PolymerGNN/polymerlearn/utils/graph_prep.py:441: RuntimeWarning: invalid value encountered in greater
   glycol_hit = (data.iloc[i,gc[0]:gc[1]].to_numpy() > 0)
-  0%|          | 0/1 [00:00<?, ?it/s]slurmstepd: error: *** JOB 56188 ON clr0738 CANCELLED AT 2022-05-04T03:07:10 DUE TO TIME LIMIT ***
+  0%|          | 0/1 [00:00<?, ?it/s]slurmstepd: error: *** JOB 58594 ON clr0829 CANCELLED AT 2022-05-08T13:04:44 DUE TO TIME LIMIT ***

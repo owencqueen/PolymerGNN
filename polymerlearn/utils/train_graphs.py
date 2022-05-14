@@ -46,6 +46,8 @@ def get_IV_add(data):
     '''
     Return the standard IV additional data (i.e. resin properties) used
         in the paper.
+    Args:
+        data (pd.Dataframe)
 
     No arguments
     '''

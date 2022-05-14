@@ -154,11 +154,10 @@ elif args.IV: # we're predicting IV
     model_gen = PolymerGNN_IVMono
 
     # Cross validation function (with hyperparameters)
-    CV = partial(CV_eval, 
+    CV = partial(CV_eval_evidential, 
         dataset = dataset,
         model_generator = model_gen,
         optimizer_generator = optimizer_gen,
-        criterion = criterion,
         model_generator_kwargs = model_generator_kwargs,
         optimizer_kwargs = {'lr': 0.0001, 'weight_decay':0.01},
         epochs = 1000,
