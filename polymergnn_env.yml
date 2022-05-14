@@ -1,8 +1,4 @@
-name: /lustre/isaac/scratch/oqueen/polymergnn_env
-channels:
-  - /sw/isaac/compilers/intel/oneAPI_2021.2.0/conda_channel
-  - intel
-  - defaults
+name: polymergnn_env
 dependencies:
   - jinja2==3.0.3=pyhd3eb1b0_0
   - pytorch-cluster==1.6.0=py38_torch_1.11.0_cu102
@@ -61,4 +57,3 @@ dependencies:
   - pyg==2.0.4=py38_torch_1.11.0_cu102
   - libgfortran-ng==7.5.0=ha8ba4b0_17
   - scikit-learn==1.0.2=py38h51133e4_1
-prefix: /lustre/isaac/scratch/oqueen/polymergnn_env

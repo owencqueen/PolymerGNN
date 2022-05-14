@@ -60,7 +60,7 @@ class PolymerGNN_Joint(torch.nn.Module):
         x = self.leaky1(self.fc1(poolAgg))
 
         # Run IV:
-        x_IV = torch.exp(self.fc2(x))
+        x_IV = self.fc2(x)
 
         # Run Tg (+ multiplying factor):
         x_Tg = torch.exp(self.fc3(x))
