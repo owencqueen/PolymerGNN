@@ -39,6 +39,7 @@ parser.add_argument('--num_cv', type = int, required = True,
     help = 'Number of cross validations')
 parser.add_argument('--IV', action = 'store_true')
 parser.add_argument('--Tg', action = 'store_true')
+parser.add_argument('--Kelvin', action='store_false')
 parser.add_argument('--properties', type = str, 
     default = ['default'], nargs = '+',
     help = 'Resin-wide properties to include in the model. \n\
@@ -85,7 +86,8 @@ if args.IV and args.Tg:
         structure_dir = structure_dir,
         Y_target=targets,
         add_features=add,
-        device = device
+        device = device,
+        kelvin=args.Kelvin
     )
 
     # Model generator kwargs:
@@ -130,7 +132,8 @@ elif args.IV: # we're predicting IV
         data = data,
         structure_dir = structure_dir,
         Y_target=targets,
-        add_features=add
+        add_features=add,
+        kelvin=args.Kelvin
     )
 
     # Model generator kwargs:
@@ -175,7 +178,8 @@ elif args.Tg: # We're predicting Tg:
         structure_dir = structure_dir,
         Y_target=targets,
         add_features=add,
-        device = device
+        device = device,
+        kelvin=args.Kelvin
     )
 
     # Model generator kwargs:
