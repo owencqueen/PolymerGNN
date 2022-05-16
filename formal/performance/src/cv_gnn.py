@@ -39,7 +39,7 @@ parser.add_argument('--num_cv', type = int, required = True,
     help = 'Number of cross validations')
 parser.add_argument('--IV', action = 'store_true')
 parser.add_argument('--Tg', action = 'store_true')
-parser.add_argument('--Kelvin', action='store_false')
+parser.add_argument('--Kelvin', action='store_true')
 parser.add_argument('--properties', type = str, 
     default = ['default'], nargs = '+',
     help = 'Resin-wide properties to include in the model. \n\

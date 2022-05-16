@@ -18,6 +18,7 @@ conda activate /lustre/isaac/scratch/oqueen/polymergnn_env
 python3 src/cv_gnn.py \
 --num_cv 1 \
 --Tg \
+-- Kelvin \
 --properties default \
 --results_save_dir $base/saved_scores/tg \
 --save_history \
