@@ -18,7 +18,7 @@ conda activate eastman
 python3 src/cv_gnn.py \
 --num_cv 1 \
 --Tg \
--- Kelvin \
+--Kelvin \
 --properties default \
 --results_save_dir $base/saved_scores/tg \
 --save_history \
