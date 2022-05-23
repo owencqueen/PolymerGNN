@@ -86,10 +86,10 @@ def plot_dist(path):
 
     fig, (ax1, ax2) = plt.subplots(1, 2)
 
-    ax1.hist(r2)
+    ax1.hist(r2, bins = 20)
     ax1.set_title('R2')
 
-    ax2.hist(mae)
+    ax2.hist(mae, bins = 20)
     ax2.set_title('MAE')
 
     plt.show()
@@ -159,16 +159,16 @@ def plot_dist_joint(path):
 
     fig, ax = plt.subplots(2, 2)
 
-    ax[0][0].hist(r2IV, bins = 50)
+    ax[0][0].hist(np.array(r2IV).flatten(), bins = 50)
     ax[0][0].set_title('R2 IV')
 
-    ax[0][1].hist(maeIV, bins = 50)
+    ax[0][1].hist(np.array(maeIV).flatten(), bins = 50)
     ax[0][1].set_title('MAE IV')
 
-    ax[1][0].hist(r2Tg, bins = 50)
+    ax[1][0].hist(np.array(r2Tg).flatten(), bins = 50)
     ax[1][0].set_title('R2 Tg')
 
-    ax[1][1].hist(maeTg, bins = 50)
+    ax[1][1].hist(np.array(maeTg).flatten(), bins = 50)
     ax[1][1].set_title('MAE Tg')
 
     plt.show()

@@ -9,17 +9,17 @@ import sys; sys.path.append('..')
 from summarize_results import get_r2_mae, get_r2_mae_joint
 
 IV_paths = [
-    '../model_comparisons/CM/iv',
-    '../model_comparisons/MBTR/iv',
-    '../model_comparisons/SOAP/iv',
+    # '../model_comparisons/CM/iv',
+    # '../model_comparisons/MBTR/iv',
+    # '../model_comparisons/SOAP/iv',
     '../arch_ablation/saved_scores/iv',
     '../performance/saved_scores/joint'
 ]
 
 tg_paths = [
-    '../model_comparisons/CM/tg',
-    '../model_comparisons/MBTR/tg',
-    '../model_comparisons/SOAP/tg',
+    # '../model_comparisons/CM/tg',
+    # '../model_comparisons/MBTR/tg',
+    # '../model_comparisons/SOAP/tg',
     '../ss_ablation/saved_scores/tg',
     '../performance/saved_scores/joint'
 ]
@@ -93,10 +93,10 @@ def filter_csv(df, comp = 'iv'):
     # Parse through the csv dataframe and filter out relevant data
 
     if comp == 'iv':
-        mask = [False, False, True, True] * 3
+        mask = [False, False, True, True] * int(df.shape[1] / 4)
 
     else:
-        mask = [True, True, False, False] * 3
+        mask = [True, True, False, False] * int(df.shape[1] / 4)
 
     relevant = df.loc[:,mask]
 
@@ -116,8 +116,55 @@ def filter_csv(df, comp = 'iv'):
     mae = [OH_mae, simp_mae, OHS_mae]
 
     return r2, mae
+
+def filter_csv_2(df, comp = 'iv'):
+
+    # Parse through the csv dataframe and filter out relevant data
+
+    if comp == 'iv':
+        mask = [False, False, True, True] * int(df.shape[1] / 4)
+
+    else:
+        mask = [True, True, False, False] * int(df.shape[1] / 4)
+
+    relevant = df.loc[:,mask]
+
+    # simp
+    simp_r2 = relevant.iloc[:,0].tolist()
+    simp_mae = relevant.iloc[:,1].tolist()
+
+    # OH
+    OH_r2 = relevant.iloc[:,2].tolist()
+    OH_mae = relevant.iloc[:,3].tolist()
+
+    # OHS
+    OHS_r2 = relevant.iloc[:,4].tolist()
+    OHS_mae = relevant.iloc[:,5].tolist()
+
+    # CM
+    CM_r2, CM_mae = relevant.iloc[:,6].tolist(), relevant.iloc[:,7].tolist()
+
+    # BOB
+    BOB_r2, BOB_mae = relevant.iloc[:,8].tolist(), relevant.iloc[:,9].tolist()
+    #10,11
+    #12,13
+    #14,15
+
+    # SOAP - skip PI * 3
+    SOAP_r2, SOAP_mae = relevant.iloc[:,16].tolist(), relevant.iloc[:,17].tolist()
+
+    # MBTR
+    MBTR_r2, MBTR_mae = relevant.iloc[:,18].tolist(), relevant.iloc[:,19].tolist()
+
+    # r2 = [OH_r2, simp_r2, OHS_r2]
+    # mae = [OH_mae, simp_mae, OHS_mae]
+
+    r2 = [simp_r2, OH_r2, OHS_r2, CM_r2, BOB_r2, SOAP_r2, MBTR_r2]
+    mae = [simp_mae, OH_mae, OHS_mae, CM_mae, BOB_mae, SOAP_mae, MBTR_mae]
+
+    return r2, mae
     
-def plot_IV():
+def plot_IV(opt = 1):
 
     #print(IV_paths[-1])
 
@@ -129,33 +176,64 @@ def plot_IV():
     r2.append(list(np.array(r2J).flatten())); mae.append(list(np.array(maeJ).flatten()))
     
     # Get data from Gavin's experiments:
-    other = pd.read_csv('CV_Data.csv', sep = '\t')
-    r2O, maeO = filter_csv(other, comp = 'iv')
+
+    if opt == 1:
+        other = pd.read_csv('CV_data2.csv')
+        r2O, maeO = filter_csv(other, comp = 'iv')
+
+        lab = [
+            'OH',
+            'Properties',
+            'OH + \nProperties',
+            'CM',
+            'MBTR',
+            'SOAP',
+            'PGNN IV',
+            'PGNN Joint'
+        ]
+
+        #c = ['red', 'blue', 'green', 'yellow']
+        c = [
+            'darkorange', 
+            'm',
+            'teal',
+            'indigo', 
+            'y', 
+            'mediumblue', 
+            'darkgreen', 
+            'darkred']
+
+    elif opt == 2:
+        other = pd.read_csv('05-16_gavin/results_clean.csv')
+        r2O, maeO = filter_csv_2(other, comp = 'iv')
+
+        lab = [
+            'Mw',
+            'One-Hot',
+            'Ont-Hot\n + Mw',
+            'CM',
+            'BOB',
+            'SOAP',
+            'MBTR',
+            'PGNN IV',
+            'PGNN Joint'
+        ]
+
+        #c = ['red', 'blue', 'green', 'yellow']
+        c = [
+            'darkorange', 
+            'm',
+            'teal',
+            'indigo', 
+            'y', 
+            'mediumblue', 
+            'darkgreen', 
+            'darkred',
+            'sienna',
+            ]
 
     r2 = r2O + r2
     mae = maeO + mae
-
-    lab = [
-        'OH',
-        'Properties',
-        'OH + \nProperties',
-        'CM',
-        'MBTR',
-        'SOAP',
-        'PGNN IV',
-        'PGNN Joint'
-    ]
-
-    #c = ['red', 'blue', 'green', 'yellow']
-    c = [
-        'darkorange', 
-        'm',
-        'teal',
-        'indigo', 
-        'y', 
-        'mediumblue', 
-        'darkgreen', 
-        'darkred']
 
     # Sort by R2:
     args = np.argsort([np.mean(r) for r in r2])
@@ -171,7 +249,7 @@ def plot_IV():
     plt.rcParams["font.family"] = "serif"
     plt.rcParams.update({'font.size': 12})
     plt.figure(figsize=FIGSIZE)
-    ridgeline(r2, overlap =0, fill = 'y', sep = 30,
+    ridgeline(r2, overlap =0, fill = 'y', sep = 10,
         labels = lab, color = c)
     plt.xlabel('$R^2$')
     plt.tight_layout()
@@ -183,7 +261,7 @@ def plot_IV():
     plt.tight_layout()
     plt.show()
 
-def plot_Tg():
+def plot_Tg(opt = 1):
 
     print(tg_paths[-1])
 
@@ -193,33 +271,60 @@ def plot_Tg():
     r2.append(list(np.array(r2J).flatten())); mae.append(list(np.array(maeJ).flatten()))
 
     # Get data from Gavin's experiments:
-    other = pd.read_csv('CV_Data.csv', sep = '\t')
-    r2O, maeO = filter_csv(other, comp = 'tg')
+    if opt == 1:
+        other = pd.read_csv('CV_data2.csv')
+        r2O, maeO = filter_csv(other, comp = 'tg')
+        lab = [
+            'OH',
+            'Properties',
+            'OH + \nProperties',
+            'CM',
+            'MBTR',
+            'SOAP',
+            'PGNN $T_g$',
+            'PGNN Joint'
+        ]
+
+    #c = ['red', 'blue', 'green', 'yellow']
+        c = [
+            'darkorange', 
+            'm',
+            'teal',
+            'indigo', 
+            'y', 
+            'mediumblue', 
+            'darkgreen', 
+            'darkred']
+
+    elif opt == 2:
+        other = pd.read_csv('05-16_gavin/results_clean.csv')
+        r2O, maeO = filter_csv_2(other, comp = 'tg')
+        lab = [
+            'Mw',
+            'One-Hot',
+            'Ont-Hot\n + Mw',
+            'CM',
+            'BOB',
+            'SOAP',
+            'MBTR',
+            'PGNN IV',
+            'PGNN Joint'
+        ]
+
+        c = [
+            'darkorange', 
+            'm',
+            'teal',
+            'indigo', 
+            'y', 
+            'mediumblue', 
+            'darkgreen', 
+            'darkred',
+            'black',
+            ]
 
     r2 = r2O + r2
     mae = maeO + mae
-
-    lab = [
-        'OH',
-        'Properties',
-        'OH + \nProperties',
-        'CM',
-        'MBTR',
-        'SOAP',
-        'PGNN $T_g$',
-        'PGNN Joint'
-    ]
-
-    #c = ['red', 'blue', 'green', 'yellow']
-    c = [
-        'darkorange', 
-        'm',
-        'teal',
-        'indigo', 
-        'y', 
-        'mediumblue', 
-        'darkgreen', 
-        'darkred']
 
     # Sort by R2:
     args = np.argsort([np.mean(r) for r in r2])
@@ -248,5 +353,5 @@ def plot_Tg():
     plt.show()
 
 if __name__ == '__main__':
-    plot_IV()
+    plot_IV(opt = 2)
 
