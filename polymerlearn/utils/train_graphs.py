@@ -517,12 +517,14 @@ def CV_eval_joint(
 
         model.train()
 
-        for e in range(epochs):
+        #for e in range(epochs):
+        e = 0
+        while True:
             
             # Batch:
             batch, Y, add_features = dataset.get_train_batch(size = batch_size)
             if add_features is not None:
-                add_features = torch.tensor(add_features).float()
+                add_features = torch.tensor(add_features).float().to(device)
 
             #Y = np.log(Y) # Log transform Y
             #[:, 0] = Y[:, 0])
@@ -535,21 +537,41 @@ def CV_eval_joint(
                 # Predictions:
                 #predictions = torch.tensor([model(*make_like_batch(batch[i])) for i in range(batch_size)], requires_grad = True).float()
                 af = None if add_features is None else add_features[i]
-                train_prediction = model(*make_like_batch(batch[i]), af)
+                A, G = make_like_batch(batch[i])
+                A, G = A.to(device), G.to(device)
+                train_prediction = model(A, G, af)
+                #train_prediction = model(*make_like_batch(batch[i]), af)
                 train_predictions.append([train_prediction[i].clone().detach().item() for i in ['IV', 'Tg']])
                 #print(predictions)
 
                 # Compute and backprop joint loss
-                loss_IV = criterion(train_prediction['IV'], torch.tensor([Y[i][0]]))
-                loss_Tg = criterion(train_prediction['Tg'], torch.tensor([Y[i][1]]))
+                loss_IV = criterion(train_prediction['IV'], torch.tensor([Y[i][0]]).to(device))
+                loss_Tg = criterion(train_prediction['Tg'], torch.tensor([Y[i][1]]).to(device))
                 loss = gamma * loss_IV + loss_Tg # Loss is additive between the two
                 optimizer.zero_grad()
                 loss.backward()
                 cum_loss += loss.item()
                 optimizer.step()
+                
+            try:
+                r2IV = r2_score(Y[:][0], train_predictions[0][:])
+            except:
+                r2IV = -1
+            try:
+                r2Tg = r2_score(Y[:][1], train_predictions[1][:])
+            except:
+                r2Tg = -1
 
             if e % 50 == 0:
-                print(f'Fold: {fold_count} \t Epoch: {e}, \t Train r2: {r2_score(Y, train_predictions):.4f} \t Train Loss: {cum_loss:.4f}')
+                #print(f'Fold: {fold_count} \t Epoch: {e}, \t Train r2: {r2_score(Y, train_predictions):.4f} \t Train Loss: {cum_loss:.4f}')
+                print(f'Fold: {fold_count} : {e}, Train r2 IV, Tg: {r2IV:.4f}, {r2Tg:.4f} \t Train Loss: {cum_loss:.4f}')
+                
+            if e > epochs and (r2IV > 0.9) and (r2Tg > 0.9):
+                # Check for stable learning on both IV and Tg
+                # Checks traning value, not validation
+                break
+            
+            e += 1
 
 
         # Test:
@@ -558,23 +580,25 @@ def CV_eval_joint(
         with torch.no_grad():
             for i in range(Ytest.shape[0]):
                 #test_preds.append(model(*make_like_batch(test_batch[i]), torch.tensor(add_test[i]).float()).clone().detach().item())
-                at = None if add_test is None else torch.tensor(add_test[i]).float()
-                test_pred = model(*make_like_batch(test_batch[i]), at)
+                at = None if add_test is None else torch.tensor(add_test[i]).float().to(device)
+                A, G = make_like_batch(test_batch[i])
+                A, G = A.to(device), G.to(device)
+                test_pred = model(A, G, at)
                 pred = [test_pred[i].clone().detach().item() for i in ['IV', 'Tg']]
                 test_preds.append(pred)
                 all_predictions.append(pred)
                 all_y.append(Ytest[i,:].detach().clone().tolist())
                 all_reference_inds.append(test_inds[i])
 
-        r2_test = r2_score(Ytest.numpy(), test_preds)
-        r2_test_IV = r2_score(Ytest.numpy()[:, 0], np.array(test_preds)[:, 0])
-        r2_test_Tg = r2_score(Ytest.numpy()[:, 1], np.array(test_preds)[:, 1])
-        mse_test = mean_squared_error(Ytest.numpy(), test_preds)
-        mse_test_IV = mean_squared_error(Ytest.numpy()[:, 0], np.array(test_preds)[:, 0])
-        mse_test_Tg = mean_squared_error(Ytest.numpy()[:, 1], np.array(test_preds)[:, 1])
-        mae_test = mean_absolute_error(Ytest.numpy(), test_preds)
-        mae_test_IV = mean_absolute_error(Ytest.numpy()[:, 0], np.array(test_preds)[:, 0])
-        mae_test_Tg = mean_absolute_error(Ytest.numpy()[:, 1], np.array(test_preds)[:, 1])
+        r2_test = r2_score(Ytest.cpu().numpy(), test_preds)
+        r2_test_IV = r2_score(Ytest.cpu().numpy()[:, 0], np.array(test_preds)[:, 0])
+        r2_test_Tg = r2_score(Ytest.cpu().numpy()[:, 1], np.array(test_preds)[:, 1])
+        mse_test = mean_squared_error(Ytest.cpu().numpy(), test_preds)
+        mse_test_IV = mean_squared_error(Ytest.cpu().numpy()[:, 0], np.array(test_preds)[:, 0])
+        mse_test_Tg = mean_squared_error(Ytest.cpu().numpy()[:, 1], np.array(test_preds)[:, 1])
+        mae_test = mean_absolute_error(Ytest.cpu().numpy(), test_preds)
+        mae_test_IV = mean_absolute_error(Ytest.cpu().numpy()[:, 0], np.array(test_preds)[:, 0])
+        mae_test_Tg = mean_absolute_error(Ytest.cpu().numpy()[:, 1], np.array(test_preds)[:, 1])
 
         print(f'Fold: {fold_count} \t Test r2: {r2_test:.4f} \t r2_IV: {r2_test_IV:.4f} \t r2_Tg: {r2_test_Tg:.4f} \t MSE: {mse_test:.4f} \t MSE_IV: {mse_test_IV:.4f} \t MSE_Tg: {mse_test_Tg:.4f} \t MAE: {mae_test:.4f} \t MAE_IV: {mae_test_IV:.4f} \t MAE_Tg: {mae_test_Tg:.4f}')
 

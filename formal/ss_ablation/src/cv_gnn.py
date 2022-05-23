@@ -136,15 +136,6 @@ elif args.IV: # we're predicting IV
         prop, use_log = build_transform_lists(args.properties)
         add = get_add_properties(data, prop, use_log)
 
-        print(list(add))
-
-        for i in range(len(add)):
-            if np.sum(np.isnan(add[i])) > 0:
-                print('NaN')
-                print('Index {}'.format(i))
-                print(add[i])
-                print('----------------') 
-
     dataset = GraphDataset(
         data = data,
         structure_dir = structure_dir,

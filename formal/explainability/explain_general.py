@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
 from polymerlearn.utils import get_IV_add, get_Tg_add, GraphDataset
 from polymerlearn.utils.train_graphs import get_add_properties
-from polymerlearn.explain import PolymerGNN_IV_EXPLAIN, PolymerGNN_Tg_EXPLAIN, PolymerGNNExplainer
+from polymerlearn.explain import PolymerGNN_IV_EXPLAIN, PolymerGNN_IVMono_EXPLAIN
+from polymerlearn.explain import PolymerGNN_Tg_EXPLAIN, PolymerGNNExplainer
 
 def agg_exps(exp_list, add_data_keys = ['Mw', 'AN', 'OHN', '%TMP']):
 
@@ -40,6 +41,7 @@ parser.add_argument('--save_path_tmp_experiment', type = str, default = None,
     help = 'Path in which to save tmp experiment results')
 parser.add_argument('--monomertype', type = str, default = 'G',
     help = 'A (acid) or G (glycol). Used only for TMP rank experiment.')
+parser.add_argument('--mono', action = 'store_true', help ='Use if using Mono variant for IV')
 args = parser.parse_args()
 
 # Load dataset:
@@ -55,7 +57,7 @@ if args.target == 'IV':
         for_add_prop = ['Mw (PS)', 'AN', 'OHN', '%TMP'][:args.num_add]
         add = get_add_properties(data, prop_names = for_add_prop)
     name_list = ['A', 'G', 'Mw', 'AN', 'OHN', '%TMP']
-    mgen = PolymerGNN_IV_EXPLAIN
+    mgen = PolymerGNN_IVMono_EXPLAIN if args.mono else PolymerGNN_IV_EXPLAIN
 else: 
     add = get_Tg_add(data)
     add_data_keys = ['Mw']

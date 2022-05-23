@@ -49,6 +49,7 @@ class PolymerGNN_Joint(torch.nn.Module):
         
         Aembed, _ = torch.max(Aembeddings, dim=0)
         Gembed, _ = torch.max(Gembeddings, dim=0)
+        
 
         # Aggregate pooled vectors
         if add_features is not None:
