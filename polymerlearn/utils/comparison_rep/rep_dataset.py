@@ -1,4 +1,5 @@
 from multiprocessing import pool
+import torch
 import os, pickle
 import numpy as np
 import pandas as pd
@@ -29,16 +30,24 @@ class RepDataset:
             #test_size = 0.25,
             rep = 'CM',
             standard_scale = False,
+            device = None
         ):
 
         self.add_features = add_features
         self.standard_scale = standard_scale
+        self.device = device
 
         rep = rep.upper()
-        assert rep in ['CM', 'MBTR', 'SOAP'], "Representation must be in ['CM', 'MBTR', 'SOAP']"
+        assert rep in ['CM', 'MBTR', 'SOAP', 'PI'], "Representation must be in ['CM', 'MBTR', 'SOAP']"
 
         Y = data.loc[:,Y_target]
         non_nan_mask = Y.notna()
+        if type(Y_target) == list:
+            assert Y_target.index('IV') < Y_target.index('Tg'), 'IV must come before Tg'
+            non_nan_mask['res_bool'] = False
+            non_nan_mask.loc[non_nan_mask[Y_target].all(1), 'res_bool'] = True
+            non_nan_mask = non_nan_mask['res_bool'].values
+        
         self.Y = Y[non_nan_mask].values # Get Y values
         self.data = data.loc[non_nan_mask,:]
 
@@ -75,7 +84,9 @@ class RepDataset:
                     self.dataset[i][j][k] = \
                         np.concatenate([self.dataset[i][j][k], np.zeros(max_size - cshape)])
 
-    def pool_dataset(self, pool_method = np.max):
+        self.size_AG = max_size * 2
+
+    def pool_dataset(self, pool_method = np.max, as_torch = False):
         # Go through and pool each
         pooled = []
         i = 0
@@ -90,9 +101,19 @@ class RepDataset:
 
             i += 1
 
-        return np.asarray(pooled)
+        P = np.asarray(pooled)
 
-    def cross_val_predict(self, model, pool_method = np.sum, verbose = 0, shuf = True, folds = 5):
+        if as_torch:
+            return torch.from_numpy(P).to(self.device)
+        
+        return P # If not returning torch
+
+    def cross_val_predict(self, 
+            model, 
+            pool_method = np.sum, 
+            verbose = 0, 
+            shuf = True, 
+            folds = 5):
         X = self.pool_dataset(pool_method)
 
         if shuf:
@@ -131,6 +152,37 @@ class RepDataset:
 
         return r2_scores, mae_scores
 
+    def __len__(self):
+        # Sum size of both A and G along with add_features
+        add_f = len(self.add_features[0])
+        return add_f + self.size_AG
+
+    def Kfold_CV(self, folds, pool_method = np.max):
+        
+        X = self.pool_dataset(pool_method)
+        y = self.Y
+        #y = torch.from_numpy(self.Y).to(self.device)
+        kfold = KFold(n_splits=folds, shuffle = True)
+
+        for train_idx, test_idx in kfold.split(X):
+            X_train, X_test = X[train_idx], X[test_idx]
+            y_train, y_test = y[train_idx], y[test_idx]  
+
+            if self.standard_scale:
+                endlen = np.asarray(self.add_features).shape[1]
+                # Scale only additional values:
+                ss = StandardScaler().fit(X_train[:,-endlen:])
+                X_train[:,-endlen:] = ss.transform(X_train[:,-endlen:])
+                X_test[:,-endlen:] = ss.transform(X_test[:,-endlen:])
+
+            yield torch.from_numpy(X_train).float(), \
+                torch.from_numpy(X_test).float(), \
+                torch.from_numpy(y_train).float(), \
+                torch.from_numpy(y_test).float(), \
+                torch.from_numpy(train_idx).float(), \
+                torch.from_numpy(test_idx).float()    
+
+
 def test_dataset():
     data = pd.read_csv('../../../dataset/pub_data.csv')
     dataset = RepDataset(data, Y_target = 'IV', rep = 'SOAP')
@@ -162,6 +214,14 @@ def test_cv():
 
     print(np.mean(scores))
 
+def test_joint():
+    from polymerlearn.utils.train_graphs import get_IV_add
+    data = pd.read_csv('../../../dataset/pub_data.csv')
+    to_add = get_IV_add(data)
+    dataset = RepDataset(data, Y_target = ['IV', 'Tg'], rep = 'SOAP', add_features=to_add)
+
+    print(dataset.Y)
+
 if __name__ == '__main__':
     #test_dataset()
-    test_cv()
+    test_joint()

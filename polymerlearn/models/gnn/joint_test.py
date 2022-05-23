@@ -45,7 +45,7 @@ class PolymerGNN_Joint(torch.nn.Module):
         # Decompose X into acid and glycol
 
         Aembeddings = self.Asage(Abatch.x, Abatch.edge_index, Abatch.batch)[0]
-        Gembeddings = self.Gsage(Gbatch.x, Gbatch.edge_index, Gbatch.batch)[0]
+        Gembeddings = self.Asage(Gbatch.x, Gbatch.edge_index, Gbatch.batch)[0]
         
         Aembed, _ = torch.max(Aembeddings, dim=0)
         Gembed, _ = torch.max(Gembeddings, dim=0)

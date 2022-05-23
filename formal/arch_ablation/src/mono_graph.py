@@ -139,7 +139,8 @@ elif args.IV: # we're predicting IV
         structure_dir = structure_dir,
         Y_target=targets,
         standard_scale = args.standard_scale,
-        add_features=add
+        add_features=add,
+        #normalize_features = True,
     )
 
     # Model generator kwargs:

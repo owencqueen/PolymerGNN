@@ -18,7 +18,7 @@ conda activate /lustre/isaac/scratch/oqueen/polymergnn_env
 python3 src/cv_gnn.py \
 --num_cv 1 \
 --IV \
---properties logMw \
+--properties Mw \
 --results_save_dir $base/saved_scores/only_mw/iv \
 --start_fold CVNUM \
 --cv_verbose 0
