@@ -1,6 +1,6 @@
 base="/lustre/isaac/scratch/oqueen/PolymerGNN/formal/performance"
 
-for i in {11..49}
+for i in {0..49}
     do
         cp $base/src_jobs/templates/CV_IV.slurm $base/src_jobs/CV_IV_$i.slurm
 

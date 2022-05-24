@@ -4,7 +4,11 @@ import pandas as pd
 import numpy as np
 from tqdm import trange
 from polymerlearn.utils import get_IV_add, get_Tg_add, GraphDataset
-from polymerlearn.models.gnn import PolymerGNN_IV, PolymerGNN_Tg, PolymerGNN_Joint
+from polymerlearn.utils.train_graphs import get_IV_add_nolog
+from polymerlearn.models.gnn import PolymerGNN_Tg, PolymerGNN_Joint
+from polymerlearn.models.gnn.ablation_models import PolymerGNN_IVMono as PolymerGNN_IV
+# from polymerlearn.models.gnn.ablation_models import PolymerGNN_TgMono
+# from polymerlearn.models.gnn.ablation_models import PolymerGNN_JointMono
 from polymerlearn.utils import train, CV_eval, get_add_properties
 from polymerlearn.utils import CV_eval_joint
 
@@ -59,6 +63,7 @@ parser.add_argument('--cv_verbose', default = 0, type = int,
     help = 'Level of verbosity for cross validation function (see Python documentation).')
 parser.add_argument('--noprop', action = 'store_true',
     help = 'If included, includes no additional resin properties')
+parser.add_argument('--standard_scale', action = 'store_true', help = 'If true, standard scale all properties')
 
 args = parser.parse_args()
 
@@ -127,7 +132,8 @@ elif args.IV: # we're predicting IV
     if args.noprop:
         add = None
     elif 'default' in args.properties:
-        add = get_IV_add(data)
+        #add = get_IV_add(data)
+        add = get_IV_add_nolog(data)
     else:
         prop, use_log = build_transform_lists(args.properties)
         add = get_add_properties(data, prop, use_log)
@@ -136,6 +142,7 @@ elif args.IV: # we're predicting IV
         data = data,
         structure_dir = structure_dir,
         Y_target=targets,
+        standard_scale = args.standard_scale,
         add_features=add
     )
 
@@ -156,7 +163,7 @@ elif args.IV: # we're predicting IV
         criterion = criterion,
         model_generator_kwargs = model_generator_kwargs,
         optimizer_kwargs = {'lr': 0.0001, 'weight_decay':0.01},
-        epochs = 800,
+        epochs = 1000,
         batch_size = 64,
         verbose = args.cv_verbose,
         use_val = False,

@@ -553,8 +553,14 @@ def CV_eval_joint(
                 cum_loss += loss.item()
                 optimizer.step()
                 
-            r2IV = r2_score(Y[:][0], train_predictions[0][:])
-            r2Tg = r2_score(Y[:][1], train_predictions[1][:])
+            try:
+                r2IV = r2_score(Y[:][0], train_predictions[0][:])
+            except:
+                r2IV = -1
+            try:
+                r2Tg = r2_score(Y[:][1], train_predictions[1][:])
+            except:
+                r2Tg = -1
 
             if e % 50 == 0:
                 #print(f'Fold: {fold_count} \t Epoch: {e}, \t Train r2: {r2_score(Y, train_predictions):.4f} \t Train Loss: {cum_loss:.4f}')

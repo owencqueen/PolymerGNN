@@ -6,6 +6,7 @@ import pandas as pd
 from torch_geometric.data import Data, InMemoryDataset
 from torch_geometric.loader import DataLoader
 from torch_geometric.utils import to_networkx
+from torch_geometric.transforms import NormalizeFeatures
 
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.preprocessing import StandardScaler
@@ -115,7 +116,8 @@ def prepare_dataloader_graph_AG(
         add_G = None, 
         get_edge_attr = False,
         device = None,
-        atom_feat=None):
+        atom_feat=None,
+        normalize_features = False):
     '''
     Prepares a dataloader given a list of molecules
 
@@ -132,12 +134,16 @@ def prepare_dataloader_graph_AG(
         add_G (dict of lists, optional): Same as add_A but for glycols.
         atom_feat (Callable[[RdKit.Mol], torch.Tensor], optional): Function to output the 
             feature matrix for a given molecule.
+        normalize_features (bool, optional): If true, normalize all node features in the Acid 
+            and Glycol graphs
     '''
 
     if atom_feat == None:
         atom_feat = get_atom_features
 
     assert len(A_mol_list) == len(G_mol_list), 'A and G mol (RDKit) lists not same length'
+
+    norm_feat = NormalizeFeatures(attrs = ['x'])
 
     # Cite: C
     data_list = []
@@ -170,6 +176,8 @@ def prepare_dataloader_graph_AG(
                 x=Ax.to(device), 
                 edge_index = Aedge_index.to(device), 
                 **add_args)
+            if normalize_features:
+                acid_data = norm_feat(acid_data)
             # All acid data should be in device
             acid_graphs.append(acid_data)
             j += 1
@@ -200,6 +208,8 @@ def prepare_dataloader_graph_AG(
                 x=Gx.to(device), 
                 edge_index=Gedge_index.to(device), 
                 **add_args)
+            if normalize_features:
+                glycol_data = norm_feat(glycol_data)
             # All glycol data should be in device
             glycol_graphs.append(glycol_data)
             j += 1
@@ -370,6 +380,8 @@ class GraphDataset:
         ss_mask (list/ndarray of bools): Mask over the variables that need to be standard
             scaled. May be used if you want to scale some variables (like AN, OHN) but not
             others (like Mw).
+        normalize_features (bool, optional): If True, normalize the X values using 
+            `torch_geometric.transforms.NormalizeFeatures` for each graph. (:default: :obj:`True`)
     '''
 
     def __init__(self,
@@ -388,7 +400,8 @@ class GraphDataset:
             standard_scale = False,
             ss_mask = None,
             z_pos_loaders = False,
-            kelvin=False
+            kelvin=False,
+            normalize_features = False,
         ):
 
         self.add_features = add_features
@@ -397,8 +410,9 @@ class GraphDataset:
         self.test_size = test_size
         self.device = device
         self.standard_scale = standard_scale
-        self.ss_mask = None
+        self.ss_mask = ss_mask
         self.z_pos_loaders = z_pos_loaders
+        self.normalize_features = normalize_features
         if self.add_features is not None:
             if self.add_features.ndim == 1:
                 self.add_features = self.add_features[:, np.newaxis] # Turn to column vector
@@ -664,7 +678,8 @@ class GraphDataset:
             add_G = {'pct': [self.glycol_pcts[i] for i in mask]}
 
             data = prepare_dataloader_graph_AG(mask_Amols, mask_Gmols, Ymask,
-                            add_A = add_A, add_G = add_G, device = self.device)
+                            add_A = add_A, add_G = add_G, device = self.device,
+                            normalize_features = self.normalize_features)
 
         return data
 
