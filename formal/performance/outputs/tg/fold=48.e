@@ -17,8 +17,13 @@ See 'conda init --help' for more information and options.
 IMPORTANT: You may need to close and restart your shell after running 'conda init'.
 
 
-/lustre/isaac/scratch/oqueen/PolymerGNN/polymerlearn/utils/graph_prep.py:337: RuntimeWarning: invalid value encountered in greater
-  acid_hit = (data.iloc[i,ac[0]:ac[1]].to_numpy() > 0)
-/lustre/isaac/scratch/oqueen/PolymerGNN/polymerlearn/utils/graph_prep.py:338: RuntimeWarning: invalid value encountered in greater
-  glycol_hit = (data.iloc[i,gc[0]:gc[1]].to_numpy() > 0)
-  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [38:17<00:00, 2297.07s/it]100%|██████████| 1/1 [38:17<00:00, 2297.09s/it]
+Traceback (most recent call last):
+  File "src/cv_gnn.py", line 6, in <module>
+    from polymerlearn.utils import get_IV_add, get_Tg_add, GraphDataset
+  File "/nfs/home/sthatigo/PolymerGNN/polymerlearn/utils/__init__.py", line 1, in <module>
+    from .graph_prep import GraphDataset
+  File "/nfs/home/sthatigo/PolymerGNN/polymerlearn/utils/graph_prep.py", line 13, in <module>
+    from polymerlearn.utils.xyz2mol import int_atom, xyz2mol
+  File "/nfs/home/sthatigo/PolymerGNN/polymerlearn/utils/xyz2mol.py", line 17, in <module>
+    from rdkit.Chem import rdmolops
+ModuleNotFoundError: No module named 'rdkit'

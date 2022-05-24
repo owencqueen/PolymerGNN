@@ -400,6 +400,7 @@ class GraphDataset:
             standard_scale = False,
             ss_mask = None,
             z_pos_loaders = False,
+            kelvin=False,
             normalize_features = False,
         ):
 
@@ -507,6 +508,10 @@ class GraphDataset:
 
         # Set Y (target)
         Y = data.loc[:,Y_target]
+        if kelvin:
+            if 'Tg' in Y_target:
+                Y['Tg'] = Y['Tg'] + 273.15
+
 
         # Mask data for empty entries
         non_nan_mask = Y.notna()
@@ -564,6 +569,8 @@ class GraphDataset:
 
         # if self.standard_scale:
         #     add_features = np.array(self.add_features)
+
+        print(Y)
 
     def get_train_batch(self, size: int):
         '''
@@ -777,9 +784,9 @@ def test_dataset():
     )
 
     dataset = GraphDataset(data = data, Y_target=['IV'], z_pos_loaders = True,
-        structure_dir = base_structure_dir)
+        structure_dir = base_structure_dir, kelvin=True)
 
-    print(dataset)
+    #print(dataset.Y)
 
 if __name__ == '__main__':
 

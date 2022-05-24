@@ -1,4 +1,4 @@
-base="/lustre/isaac/scratch/oqueen/PolymerGNN/formal/performance"
+base="/lustre/isaac/scratch/sthatigo/PolymerGNN/formal/performance"
 
 for i in {11..49}
     do
