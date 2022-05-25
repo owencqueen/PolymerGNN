@@ -93,7 +93,7 @@ if args.IV and args.Tg:
         Y_target=targets,
         add_features=add,
         device = device,
-        kelvin=args.Kelvin
+        kelvin=args.Kelvin,
         standard_scale = args.standard_scale)
 
     # Model generator kwargs:
@@ -160,7 +160,7 @@ elif args.IV: # we're predicting IV
         criterion = criterion,
         model_generator_kwargs = model_generator_kwargs,
         optimizer_kwargs = {'lr': 0.0001, 'weight_decay':0.01},
-        epochs = 1000,
+        epochs = 800,
         batch_size = 64,
         verbose = args.cv_verbose,
         use_val = False,

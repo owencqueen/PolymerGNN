@@ -19,7 +19,8 @@ python3 src/cv_gnn.py \
 --num_cv 1 \
 --Tg \
 --IV \
---properties logAN logOHN %TMP \
+--properties AN OHN %TMP \
 --results_save_dir $base/saved_scores/no_mw/joint \
 --start_fold CVNUM \
+--standard_scale \
 --cv_verbose 0
