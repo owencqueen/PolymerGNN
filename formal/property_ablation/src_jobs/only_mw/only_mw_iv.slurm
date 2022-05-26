@@ -21,4 +21,5 @@ python3 src/cv_gnn.py \
 --properties Mw \
 --results_save_dir $base/saved_scores/only_mw/iv \
 --start_fold CVNUM \
+--standard_scale \
 --cv_verbose 0

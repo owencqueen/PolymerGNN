@@ -17,8 +17,8 @@ See 'conda init --help' for more information and options.
 IMPORTANT: You may need to close and restart your shell after running 'conda init'.
 
 
-/lustre/isaac/scratch/oqueen/PolymerGNN/polymerlearn/utils/graph_prep.py:337: RuntimeWarning: invalid value encountered in greater
+/lustre/isaac/scratch/oqueen/PolymerGNN/polymerlearn/utils/graph_prep.py:451: RuntimeWarning: invalid value encountered in greater
   acid_hit = (data.iloc[i,ac[0]:ac[1]].to_numpy() > 0)
-/lustre/isaac/scratch/oqueen/PolymerGNN/polymerlearn/utils/graph_prep.py:338: RuntimeWarning: invalid value encountered in greater
+/lustre/isaac/scratch/oqueen/PolymerGNN/polymerlearn/utils/graph_prep.py:455: RuntimeWarning: invalid value encountered in greater
   glycol_hit = (data.iloc[i,gc[0]:gc[1]].to_numpy() > 0)
-  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [30:14<00:00, 1814.99s/it]100%|██████████| 1/1 [30:15<00:00, 1815.01s/it]
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [34:00<00:00, 2040.07s/it]100%|██████████| 1/1 [34:00<00:00, 2040.07s/it]

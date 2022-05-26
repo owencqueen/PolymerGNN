@@ -1,1 +1,24 @@
-Fold: 1 	 Test r2: -2.8027 	 Test Loss: 0.1462 	 Test MAE: 0.3283
+        IV
+0    0.279
+1    0.321
+2    0.272
+3    0.257
+4    0.260
+..     ...
+291  0.584
+292  0.587
+293  0.538
+294  0.357
+295  0.548
+
+[296 rows x 1 columns]
+Fold: 1 	 Test r2: 0.7618 	 Test Loss: 0.0191 	 Test MAE: 0.0703
+Fold: 2 	 Test r2: 0.8921 	 Test Loss: 0.0055 	 Test MAE: 0.0543
+Fold: 3 	 Test r2: 0.8571 	 Test Loss: 0.0057 	 Test MAE: 0.0463
+Fold: 4 	 Test r2: 0.7035 	 Test Loss: 0.0115 	 Test MAE: 0.0546
+Fold: 5 	 Test r2: 0.7518 	 Test Loss: 0.0059 	 Test MAE: 0.0509
+Final avg. r2:  0.7932627604483775
+Final avg. MSE: 0.009545010230770406
+Final avg. MAE: 0.055291999558455686
+R2: 0.7932627604483775 +- 0.0
+MAE: 0.055291999558455686 +- 0.0

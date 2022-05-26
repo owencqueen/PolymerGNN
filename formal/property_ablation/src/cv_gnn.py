@@ -94,13 +94,14 @@ if args.IV and args.Tg:
         structure_dir = structure_dir,
         Y_target=targets,
         add_features=add,
-        device = device
+        device = device,
+        standard_scale = args.standard_scale,
     )
 
     # Model generator kwargs:
     model_generator_kwargs = {
         'input_feat': 6,
-        'hidden_channels': 32,
+        'hidden_channels': 64,
         'num_additional': 0 if args.noprop else add.shape[1], 
     }
 
@@ -113,8 +114,8 @@ if args.IV and args.Tg:
         optimizer_generator = optimizer_gen,
         criterion = criterion,
         model_generator_kwargs = model_generator_kwargs,
-        optimizer_kwargs = {'lr': 0.0001, 'weight_decay':0.01},
-        epochs = 1000,
+        optimizer_kwargs = {'lr': 0.0001, 'weight_decay':0.05},
+        epochs = 1200,
         batch_size = 64,
         verbose = args.cv_verbose,
         gamma = 1e5,

@@ -1,10 +1,24 @@
-Fold: 1 	 Test r2: 0.7400 	 Test Loss: 0.0189 	 Test MAE: 0.0575
-Fold: 2 	 Test r2: 0.9031 	 Test Loss: 0.0053 	 Test MAE: 0.0477
-Fold: 3 	 Test r2: 0.8217 	 Test Loss: 0.0065 	 Test MAE: 0.0553
-Fold: 4 	 Test r2: 0.7123 	 Test Loss: 0.0113 	 Test MAE: 0.0698
-Fold: 5 	 Test r2: 0.6688 	 Test Loss: 0.0102 	 Test MAE: 0.0593
-Final avg. r2:  0.7691798686698368
-Final avg. MSE: 0.010458222696219797
-Final avg. MAE: 0.05792827211434439
-R2: 0.7691798686698368 +- 0.0
-MAE: 0.05792827211434439 +- 0.0
+        IV
+0    0.279
+1    0.321
+2    0.272
+3    0.257
+4    0.260
+..     ...
+291  0.584
+292  0.587
+293  0.538
+294  0.357
+295  0.548
+
+[296 rows x 1 columns]
+Fold: 1 	 Test r2: 0.8991 	 Test Loss: 0.0038 	 Test MAE: 0.0406
+Fold: 2 	 Test r2: 0.7714 	 Test Loss: 0.0078 	 Test MAE: 0.0485
+Fold: 3 	 Test r2: 0.7058 	 Test Loss: 0.0191 	 Test MAE: 0.0701
+Fold: 4 	 Test r2: 0.7044 	 Test Loss: 0.0137 	 Test MAE: 0.0681
+Fold: 5 	 Test r2: 0.8541 	 Test Loss: 0.0069 	 Test MAE: 0.0475
+Final avg. r2:  0.7869802731523933
+Final avg. MSE: 0.010252113813147919
+Final avg. MAE: 0.05495677684009278
+R2: 0.7869802731523933 +- 0.0
+MAE: 0.05495677684009278 +- 0.0

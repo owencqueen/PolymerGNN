@@ -1,6 +1,6 @@
 base="/lustre/isaac/scratch/oqueen/PolymerGNN/formal/property_ablation"
 
-for i in {0..10}
+for i in {0..49}
     do
         cp $base/src_jobs/no_mw/no_mw.slurm $base/src_jobs/no_mw_$i.slurm
 

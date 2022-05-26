@@ -23,4 +23,5 @@ python3 src/cv_gnn.py \
 --save_history \
 --history_loc $base/history/no_tmp/iv \
 --start_fold CVNUM \
+--standard_scale \
 --cv_verbose 0

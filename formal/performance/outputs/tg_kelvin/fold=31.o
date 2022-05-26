@@ -1,0 +1,24 @@
+         Tg
+0    354.80
+1    358.90
+2    357.19
+3    306.66
+4    313.93
+..      ...
+291  229.15
+292  252.15
+293  250.15
+294  265.15
+295  227.15
+
+[296 rows x 1 columns]
+Fold: 1 	 Test r2: 0.8729 	 Test Loss: 163.8573 	 Test MAE: 9.3797
+Fold: 2 	 Test r2: 0.8454 	 Test Loss: 225.9217 	 Test MAE: 11.8826
+Fold: 3 	 Test r2: 0.8150 	 Test Loss: 310.6143 	 Test MAE: 10.0523
+Fold: 4 	 Test r2: 0.8157 	 Test Loss: 209.7342 	 Test MAE: 12.0507
+Fold: 5 	 Test r2: 0.5810 	 Test Loss: 612.1871 	 Test MAE: 20.5601
+Final avg. r2:  0.7859969286385777
+Final avg. MSE: 304.46294194581094
+Final avg. MAE: 12.785091509137834
+R2: 0.7859969286385777 +- 0.0
+MAE: 12.785091509137834 +- 0.0
