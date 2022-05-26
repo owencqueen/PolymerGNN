@@ -1,4 +1,3 @@
-from multiprocessing import pool
 import torch
 import os, pickle
 import numpy as np

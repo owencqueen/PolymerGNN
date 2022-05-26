@@ -13,7 +13,8 @@ IV_paths = [
     # '../model_comparisons/MBTR/iv',
     # '../model_comparisons/SOAP/iv',
     '../arch_ablation/saved_scores/iv',
-    '../performance/saved_scores/joint'
+    #'../performance/saved_scores/joint'
+    #'../property_ablation/saved_scores/no_tmp/joint'
 ]
 
 tg_paths = [
@@ -21,7 +22,7 @@ tg_paths = [
     # '../model_comparisons/MBTR/tg',
     # '../model_comparisons/SOAP/tg',
     '../ss_ablation/saved_scores/tg',
-    '../performance/saved_scores/joint'
+    #'../property_ablation/saved_scores/no_tmp/joint'
 ]
 
 FIGSIZE = (6, 4)
@@ -168,12 +169,13 @@ def plot_IV(opt = 1):
 
     #print(IV_paths[-1])
 
-    r2, mae = get_data(IV_paths[:-1])
-    r2J, maeJ, _, _ = get_data_joint([IV_paths[-1]]) 
+    #r2, mae = get_data(IV_paths[:-1])
+    r2, mae = get_data(IV_paths)
+    #r2J, maeJ, _, _ = get_data_joint([IV_paths[-1]]) 
 
     #print(list(np.array(r2J).flatten()))
 
-    r2.append(list(np.array(r2J).flatten())); mae.append(list(np.array(maeJ).flatten()))
+    #r2.append(list(np.array(r2J).flatten())); mae.append(list(np.array(maeJ).flatten()))
     
     # Get data from Gavin's experiments:
 
@@ -216,7 +218,7 @@ def plot_IV(opt = 1):
             'SOAP',
             'MBTR',
             'PGNN IV',
-            'PGNN Joint'
+            #'PGNN Joint'
         ]
 
         #c = ['red', 'blue', 'green', 'yellow']
@@ -229,7 +231,7 @@ def plot_IV(opt = 1):
             'mediumblue', 
             'darkgreen', 
             'darkred',
-            'sienna',
+            #'sienna',
             ]
 
     r2 = r2O + r2
@@ -265,10 +267,11 @@ def plot_Tg(opt = 1):
 
     print(tg_paths[-1])
 
-    r2, mae = get_data(tg_paths[:-1])
-    _, _ , r2J, maeJ = get_data_joint([tg_paths[-1]]) 
+    #r2, mae = get_data(tg_paths[:-1])
+    r2, mae = get_data(tg_paths)
+    #_, _ , r2J, maeJ = get_data_joint([tg_paths[-1]]) 
 
-    r2.append(list(np.array(r2J).flatten())); mae.append(list(np.array(maeJ).flatten()))
+    #r2.append(list(np.array(r2J).flatten())); mae.append(list(np.array(maeJ).flatten()))
 
     # Get data from Gavin's experiments:
     if opt == 1:
@@ -300,19 +303,19 @@ def plot_Tg(opt = 1):
         other = pd.read_csv('05-16_gavin/results_clean.csv')
         r2O, maeO = filter_csv_2(other, comp = 'tg')
         lab = [
-            'Mw',
+            #'Mw',
             'One-Hot',
             'Ont-Hot\n + Mw',
             'CM',
             'BOB',
             'SOAP',
             'MBTR',
-            'PGNN IV',
-            'PGNN Joint'
+            'PGNN $T_g$',
+            #'PGNN Joint'
         ]
 
         c = [
-            'darkorange', 
+            #'darkorange', 
             'm',
             'teal',
             'indigo', 
@@ -320,11 +323,12 @@ def plot_Tg(opt = 1):
             'mediumblue', 
             'darkgreen', 
             'darkred',
-            'black',
+            #'black',
             ]
 
     r2 = r2O + r2
     mae = maeO + mae
+    r2, mae = r2[1:], mae[1:]
 
     # Sort by R2:
     args = np.argsort([np.mean(r) for r in r2])
@@ -340,7 +344,7 @@ def plot_Tg(opt = 1):
     plt.rcParams["font.family"] = "serif"
     plt.rcParams.update({'font.size': 12})
     plt.figure(figsize=FIGSIZE)
-    ridgeline(r2, overlap =0, fill = 'y', sep = 10,
+    ridgeline(r2, overlap =0, fill = 'y', sep = 20,
         labels = lab, color = c)
     plt.xlabel('$R^2$')
     plt.tight_layout()
@@ -353,5 +357,6 @@ def plot_Tg(opt = 1):
     plt.show()
 
 if __name__ == '__main__':
+    plot_Tg(opt = 2)
     plot_IV(opt = 2)
 

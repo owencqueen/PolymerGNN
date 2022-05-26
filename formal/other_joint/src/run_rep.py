@@ -8,6 +8,7 @@ from tqdm import trange
 from functools import partial
 
 from polymerlearn.utils.comparison_rep.rep_dataset import RepDataset
+from polymerlearn.utils.comparison_rep.basic_rep_dataset import BinaryDataset
 from polymerlearn.utils.train_graphs import get_IV_add, get_Tg_add
 from polymerlearn.utils.train_graphs import get_IV_add_nolog, get_Tg_add_nolog
 from polymerlearn.utils.comparison_rep.train_reps import CV_eval, CV_eval_joint
@@ -30,7 +31,7 @@ parser.add_argument('--standard_scale', action = 'store_true',
 
 args = parser.parse_args()
 
-assert args.rep in ['CM', 'MBTR', 'SOAP', 'PI']
+assert args.rep in ['CM', 'MBTR', 'SOAP', 'PI', 'OH', 'OHP']
 
 data = pd.read_csv('../../dataset/pub_data.csv')
 if args.standard_scale:
@@ -40,18 +41,38 @@ else:
 
 name = 'J_results_fold={}.pickle'
 
-dataset = RepDataset(
-    data = data,
-    Y_target = ['IV', 'Tg'],
-    rep_dir = os.path.join('../../Representations'),
-    add_features = add_features,
-    rep = args.rep,
-    standard_scale=args.standard_scale,
-)
+if args.rep == 'OHP':
+    dataset = BinaryDataset(
+            data = data,
+            Y_target = ['IV', 'Tg'], 
+            add_features = add_features,
+            ac = (20,33),
+            gc = (34,46),
+            standard_scale = args.standard_scale,
+        )
+elif args.rep == 'OH':
+    dataset = BinaryDataset(
+            data = data,
+            Y_target = ['IV', 'Tg'], 
+            add_features = None,
+            ac = (20,33),
+            gc = (34,46),
+            standard_scale = args.standard_scale,
+        )
+else:
+    dataset = RepDataset(
+        data = data,
+        Y_target = ['IV', 'Tg'],
+        rep_dir = os.path.join('../../Representations'),
+        add_features = add_features,
+        rep = args.rep,
+        standard_scale=args.standard_scale,
+    )
 
 model_generator = Vector_Joint
 model_generator_kwargs = {
     'input_feat': len(dataset), # Gets number of features per sample
+    # len should work for both regular and one-hot datasets
     'hidden_channels': 32
 }
 
