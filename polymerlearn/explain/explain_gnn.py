@@ -18,25 +18,52 @@ class FeatureExtractor(torch.nn.Module):
     
     '''
     
-    layers = ['Asage', 'Gsage']
 
-    def __init__(self, model: torch.nn.Module):
+    def __init__(self, model: torch.nn.Module, use_mono: bool = False):
         super().__init__()
         self.model = model
-        self._features = {layer: torch.empty(0) for layer in self.layers}
+        self.use_mono = use_mono
+        self.layers = ['sage'] if self.use_mono else ['Asage', 'Gsage']
+        #print(self.layers)
+        if self.use_mono:
+            self._features = {layer: None for layer in ['Asage', 'Gsage']}
+        else:
+            self._features = {layer: torch.empty(0) for layer in self.layers}
 
         for layer_id in self.layers:
             layer = dict([*self.model.named_modules()])[layer_id]
+            # Register forward hook to get intermediate outputs of layers
             layer.register_forward_hook(self.save_outputs_hook(layer_id))
 
     def save_outputs_hook(self, layer_id: str) -> Callable:
-        def fn(_, __, output):
-            self._features[layer_id] = output
+        '''
+        Hook function for saving outputs of intermediate layers
+        '''
+        if self.use_mono:
+            def fn(_, __, output):
+                if self._features['Asage'] is not None:
+                    self._features['Gsage'] = output
+                    #print('Reg G')
+                else:
+                    self._features['Asage'] = output
+                    #print('Reg A')
+        else:
+            def fn(_, __, output):
+                self._features[layer_id] = output
         return fn
 
     def forward(self, input_tup) -> Dict[str, torch.Tensor]:
         _ = self.model(*input_tup)
-        return self._features
+        # print('Features', self._features)
+        # print('Features', len(self._features['Asage']))
+        # print('Features', len(self._features['Gsage']))
+        # exit()
+        if self.use_mono:
+            feat_copy = self._features
+            self._features = {layer: None for layer in ['Asage', 'Gsage']}
+            return feat_copy
+        else:
+            return self._features
 
 def parse_batches(
         batch: torch_geometric.data.Batch, 
@@ -65,11 +92,15 @@ def index_to_batch_mapper(batch, ratio = 0.5):
       to the original sample inputs.
     '''
     num_batches = max(batch).item() + 1
-    batch_sizes = [torch.sum(batch == b) for b in range(num_batches)]
+    #print(f'batch (size: {batch.shape})', batch)
+    #print('Num batches', num_batches)
+    batch_sizes = [torch.sum(batch == b).item() for b in range(num_batches)]
+    #print('Batch sizes', batch_sizes)
 
     # Multiply and take math.ceil for each batch
     final_sizes = [math.ceil(b * ratio) for b in batch_sizes]
     final_sizes = np.cumsum(final_sizes)
+    #print(final_sizes)
 
     # Now return dictionary mapping integer index to the given input sample:
     ind_map = {}
@@ -91,13 +122,14 @@ class PolymerGNNExplainer:
     '''
 
     def __init__(self, model: torch.nn.Module, explain_layer = 'fc1',
-            pool_ratio = 0.5):
+            pool_ratio = 0.5, use_mono: bool = False):
         
         self.model = model
         self.explain_layer = explain_layer
         self.ratio = pool_ratio
+        self.use_mono = use_mono
         self.gcam  = LayerGradCam(model, getattr(model, explain_layer))
-        self.extractor = FeatureExtractor(model)
+        self.extractor = FeatureExtractor(model, use_mono = self.use_mono)
 
     def get_attribution(self, 
             batch: Tuple,
@@ -112,7 +144,7 @@ class PolymerGNNExplainer:
         Args:
         '''
         # Parse the batches for captum usage
-        batches_tup = parse_batches(batch, add_test)
+        batches_tup = parse_batches(batch, add_test) # Parses batch into appropriate input for GNN
         input_tup = tuple([batches_tup[j] for j in range(1, len(batches_tup))])
 
         if mol_rep_agg is None:
@@ -125,17 +157,31 @@ class PolymerGNNExplainer:
             attribute_to_layer_input = True
         )
 
-        # Get features in a feedforward step
+        # Get intermediate features in a feedforward step
         features = self.extractor(batches_tup)
 
         def attr_scores(key = 'A', hc = 32):
-            bind = 2 if key == 'A' else -2
+            #print(key)
+            bind = 2 if key == 'A' else -2 # Location of batch
             add_to_bottom = 0 if key == 'A' else 32
+            # Map indices to batches
             ind_map = index_to_batch_mapper(batches_tup[bind], ratio = self.ratio)
+            #print(ind_map)
 
+            # Set which layer to get attributions from
             str_key = '{}sage'.format(key)
+            #print('str key', features[str_key][0].shape)
 
+            # assert (max(ind_map.keys()) + 1) == features[str_key][0].shape[0], \
+            #     'Mismatch size dict={} vs. feat={}'.format((max(ind_map.keys()) + 1), features[str_key][0].shape[0])
+
+            #print('Dict', max(ind_map.keys()) + 1)
+            #print('Features', features[str_key][0].shape[0])
+
+            # Get argmax of features on which to assign attributions
             feat_argmax = torch.argmax(features[str_key][0], dim = 0)
+            # Accesses features for the given layer, defined by key
+            #print(feat_argmax)
 
             # Expand scores backward from the max pooling:
             scores = torch.zeros((len(set(ind_map.values())), 32))
@@ -145,10 +191,13 @@ class PolymerGNNExplainer:
 
             return scores
 
+        # Aggregates molecular representations together in scores:
         scores = {
             'A': mol_rep_agg(attr_scores('A')).detach().clone(),
             'G': mol_rep_agg(attr_scores('G')).detach().clone()
         }
+
+        #print('-----------------------------------------------')
 
         # Score individual attributes:
         num_add = add_test.shape[0]

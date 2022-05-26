@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
 from polymerlearn.utils import get_IV_add, get_Tg_add, GraphDataset
+from polymerlearn.utils.train_graphs import get_IV_add_nolog
 from polymerlearn.utils.train_graphs import get_add_properties
 from polymerlearn.explain import PolymerGNN_IV_EXPLAIN, PolymerGNN_IVMono_EXPLAIN
 from polymerlearn.explain import PolymerGNN_Tg_EXPLAIN, PolymerGNNExplainer
@@ -50,7 +51,7 @@ data = pd.read_csv(os.path.join('/Users/owenqueen/Desktop/Eastman_Project-confid
             'pub_data.csv'))
 
 if args.target == 'IV':
-    add = get_IV_add(data)
+    add = get_IV_add_nolog(data)
     add_data_keys = ['Mw', 'AN', 'OHN', '%TMP']
     if args.num_add is not None:
         add_data_keys = add_data_keys[:args.num_add]
@@ -69,7 +70,8 @@ dataset = GraphDataset(
     Y_target = [args.target],
     structure_dir = '../../Structures/AG/xyz',
     test_size = 0.2,
-    add_features = add
+    add_features = add,
+    standard_scale = (args.target == 'IV')
 )
 
 # ASSUME model_kwargs STAYS THE SAME
@@ -94,7 +96,7 @@ for f in tqdm(os.listdir(args.history_loc)):
         mexplain = mgen(**model_kwargs)
         mexplain.load_state_dict(history['model_state_dicts'][i])
 
-        explainer = PolymerGNNExplainer(mexplain)
+        explainer = PolymerGNNExplainer(mexplain, use_mono = args.mono)
 
         # Provide arguments based on history
         exp_out = explainer.get_testing_explanation(
@@ -154,6 +156,8 @@ else:
     print('Glycol embedding mean importance', np.mean(glycol_scores))
 
     plt.rcParams["font.family"] = "serif"
+    fig = plt.gcf()
+    fig.set_size_inches(5, 5)
 
     plt.hlines(0, xmin=0, xmax=len(name_list) + 1, colors = 'black', linestyles='dashed')
     plt.boxplot(all_data)

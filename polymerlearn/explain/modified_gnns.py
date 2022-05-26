@@ -116,7 +116,7 @@ class PolymerGNN_IVMono_EXPLAIN(torch.nn.Module):
         x = self.fc2(x)
 
         # Because we're predicting log:
-        return torch.exp(x)
+        return x
 
 class PolymerGNN_Tg_EXPLAIN(torch.nn.Module):
     def __init__(self, input_feat, hidden_channels, num_additional = 0):
