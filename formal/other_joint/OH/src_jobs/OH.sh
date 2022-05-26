@@ -1,13 +1,13 @@
-base="/lustre/isaac/scratch/oqueen/PolymerGNN/formal/other_joint/MBTR"
+base="/lustre/isaac/scratch/oqueen/PolymerGNN/formal/other_joint/OH"
 
-for i in {0..2}
+for i in {0..49}
     do
-        cp $base/src_jobs/CV_MBTR.slurm $base/src_jobs/CV_MBTR_$i.slurm
+        cp $base/src_jobs/CV_OH.slurm $base/src_jobs/CV_OH_$i.slurm
  
-        sed -i "s/CVNUM/$i/" $base/src_jobs/CV_MBTR_$i.slurm
+        sed -i "s/CVNUM/$i/" $base/src_jobs/CV_OH_$i.slurm
 
-        sbatch $base/src_jobs//CV_MBTR_$i.slurm
+        sbatch $base/src_jobs//CV_OH_$i.slurm
 
-        rm $base/src_jobs/CV_MBTR_$i.slurm
+        rm $base/src_jobs/CV_OH_$i.slurm
 
     done

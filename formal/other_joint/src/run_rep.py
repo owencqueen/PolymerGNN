@@ -27,7 +27,6 @@ parser.add_argument('--results_save_dir', type = str,
     default = None)
 parser.add_argument('--standard_scale', action = 'store_true', 
     help = 'If included, standard scale all variables before input')
-#parser.add_argument('--Tg', action = 'store_true')
 
 args = parser.parse_args()
 
@@ -50,6 +49,7 @@ if args.rep == 'OHP':
             gc = (34,46),
             standard_scale = args.standard_scale,
         )
+    crt = False
 elif args.rep == 'OH':
     dataset = BinaryDataset(
             data = data,
@@ -59,6 +59,7 @@ elif args.rep == 'OH':
             gc = (34,46),
             standard_scale = args.standard_scale,
         )
+    crt = False
 else:
     dataset = RepDataset(
         data = data,
@@ -68,6 +69,7 @@ else:
         rep = args.rep,
         standard_scale=args.standard_scale,
     )
+    crt = True
 
 model_generator = Vector_Joint
 model_generator_kwargs = {
@@ -93,6 +95,7 @@ CV = partial(CV_eval_joint,
     get_scores = True,
     device = device,
     save_state_dicts = True,
+    check_r2_thresh = crt
 )
 
 

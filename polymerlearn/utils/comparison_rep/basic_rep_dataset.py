@@ -55,8 +55,8 @@ class BinaryDataset:
             self.add_features = list_mask(self.add_features, list(non_nan_mask))
             self.add_features = np.array(self.add_features, dtype = float)
 
-        self.acid_len = self.binary_acids.shape[0]
-        self.glycol_len = self.binary_glycols.shape[0]
+        self.acid_len = self.binary_acids.shape[1]
+        self.glycol_len = self.binary_glycols.shape[1]
 
         # Get entire dataset:
         # Structure: [([A, A], [G]), ..., ([A, A, A], [G, G, G, G])]
@@ -64,7 +64,8 @@ class BinaryDataset:
 
     def __len__(self):
         # Sum size of both A and G along with add_features
-        return self.add_features.shape[0] + self.acid_len + self.glycol_len
+        af_shape = 0 if self.add_features is None else self.add_features.shape[1]
+        return af_shape + self.acid_len + self.glycol_len
 
     def Kfold_CV(self, folds):
         
@@ -80,7 +81,7 @@ class BinaryDataset:
             X_train, X_test = X[train_idx], X[test_idx]
             y_train, y_test = y[train_idx], y[test_idx] 
 
-            if self.standard_scale:
+            if self.standard_scale and (self.add_features is not None):
                 endlen = np.asarray(self.add_features).shape[1]
                 # Scale only additional values:
                 ss = StandardScaler().fit(X_train[:,-endlen:])

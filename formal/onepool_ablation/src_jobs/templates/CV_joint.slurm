@@ -17,7 +17,8 @@ python3 src/mono_graph.py \
 --num_cv 1 \
 --IV \
 --Tg \
---properties default \
+--properties Mw AN OHN \
 --results_save_dir $base/saved_scores/joint \
 --start_fold CVNUM \
+--standard_scale \
 --cv_verbose 0

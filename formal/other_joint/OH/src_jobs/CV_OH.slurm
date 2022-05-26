@@ -4,9 +4,9 @@
 #SBATCH --nodes=1 
 #SBATCH --ntasks-per-node=4
 #SBATCH --time=04:00:00
-#SBATCH -o /lustre/isaac/scratch/oqueen/PolymerGNN/formal/other_joint/MBTR/out/MBTR_CVNUM.o
-#SBATCH -e /lustre/isaac/scratch/oqueen/PolymerGNN/formal/other_joint/MBTR/out/MBTR_CVNUM.e
-#SBATCH -J MBTR_CVNUM
+#SBATCH -o /lustre/isaac/scratch/oqueen/PolymerGNN/formal/other_joint/OH/out/OH_CVNUM.o
+#SBATCH -e /lustre/isaac/scratch/oqueen/PolymerGNN/formal/other_joint/OH/out/OH_CVNUM.e
+#SBATCH -J OH_CVNUM
 
 base="/lustre/isaac/scratch/oqueen/PolymerGNN/formal/other_joint"
 
@@ -15,7 +15,7 @@ conda activate /lustre/isaac/scratch/oqueen/polymergnn_env
 
 python3 src/run_rep.py \
 --num_cv 1 \
---rep MBTR \
---results_save_dir $base/MBTR/saved_scores \
+--rep OH \
+--results_save_dir $base/OH/saved_scores \
 --start_fold CVNUM \
 --standard_scale
