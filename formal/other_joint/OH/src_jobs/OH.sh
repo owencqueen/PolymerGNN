@@ -1,6 +1,6 @@
 base="/lustre/isaac/scratch/oqueen/PolymerGNN/formal/other_joint/OH"
 
-for i in {0..2}
+for i in {0..49}
     do
         cp $base/src_jobs/CV_OH.slurm $base/src_jobs/CV_OH_$i.slurm
  

@@ -197,7 +197,8 @@ def CV_eval_joint(
         epochs = 1000,
         get_scores = False,
         device = None,
-        save_state_dicts = False):
+        save_state_dicts = False,
+        check_r2_thresh = True):
     '''
     Cross validation of the joint Tg/IV model
 
@@ -271,9 +272,11 @@ def CV_eval_joint(
                 #print(f'Fold: {fold_count} \t Epoch: {e}, \t Train r2: {r2_score(Y, train_predictions):.4f} \t Train Loss: {cum_loss:.4f}')
                 print(f'Fold: {fold_count} : {e}, Train r2 IV, Tg: {r2IV:.4f}, {r2Tg:.4f} \t Train Loss: {cum_loss:.4f}')
                 
-            if e > epochs and (r2IV > 0.9) and (r2Tg > 0.9):
+            if check_r2_thresh and (e > epochs) and (r2IV > 0.9) and (r2Tg > 0.9):
                 # Check for stable learning on both IV and Tg
                 # Checks traning value, not validation
+                break
+            elif (not check_r2_thresh) and (e > epochs):
                 break
             
             e += 1
