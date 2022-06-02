@@ -21,4 +21,4 @@ IMPORTANT: You may need to close and restart your shell after running 'conda ini
   acid_hit = (data.iloc[i,ac[0]:ac[1]].to_numpy() > 0)
 /lustre/isaac/scratch/oqueen/PolymerGNN/polymerlearn/utils/graph_prep.py:456: RuntimeWarning: invalid value encountered in greater
   glycol_hit = (data.iloc[i,gc[0]:gc[1]].to_numpy() > 0)
-  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]/var/spool/slurm/spool/job69188/slurm_script: line 24: 3471664 Bus error               (core dumped) python3 src/mono_graph.py --num_cv 1 --IV --Tg --properties Mw AN OHN --results_save_dir $base/saved_scores/joint --start_fold 26 --standard_scale --cv_verbose 0
