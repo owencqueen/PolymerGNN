@@ -12,6 +12,7 @@ joint_paths = [
     '../other_joint/CM/saved_scores',
     '../other_joint/MBTR/saved_scores',
     '../other_joint/PI/saved_scores',
+    '../performance/saved_scores/joint'
 ]
 
 FIGSIZE = (6, 4)
@@ -213,22 +214,23 @@ def plot_joint(opt = 1):
 
     elif opt == 2:
         other = pd.read_csv('05-16_gavin/results_clean.csv')
-        r2_iv, mae_iv = filter_csv_2(other, comp = 'iv')
+        #r2_iv, mae_iv = filter_csv_2(other, comp = 'iv')
         #print(len(r2_iv))
-        r2_tg, mae_tg = filter_csv_2(other, comp = 'tg')
+        #r2_tg, mae_tg = filter_csv_2(other, comp = 'tg')
         #print(len(r2_tg))
 
         lab = [
-            'Mw',
-            'One-Hot',
-            'Ont-Hot\n + Mw',
-            'CM',
-            'BOB',
-            #'SOAP',
-            'MBTR',
-            'PGNN Joint CM',
-            'PGNN Joint MBTR',
-            'PGNN Joint PI'
+            # 'Mw',
+            # 'CM',
+            # 'BOB',
+            # #'SOAP',
+            # 'MBTR',
+            # 'Binary',
+            # 'Binary\n + Properties',
+            'Joint CM',
+            'Joint MBTR',
+            'Joint PI',
+            'Joint PGNN'
         ]
 
         #c = ['red', 'blue', 'green', 'yellow']
@@ -246,12 +248,10 @@ def plot_joint(opt = 1):
             'fuchsia'
             ]
 
-    r2IV = r2_iv + r2IV
-    r2Tg = r2_tg + r2Tg
-    maeIV = mae_iv + maeIV
-    maeTg = mae_tg + maeTg
-
-    print(maeTg)
+    #r2IV = r2_iv + r2IV
+    #r2Tg = r2_tg + r2Tg
+    #maeIV = mae_iv + maeIV
+    #maeTg = mae_tg + maeTg
 
     # Sort by R2:
     args = np.argsort([np.mean(r) for r in r2IV])
@@ -266,9 +266,6 @@ def plot_joint(opt = 1):
     lab = apply_args(lab)
     c = apply_args(c)
 
-    print(len(maeTg))
-    print(len(maeTg[0]))
-
 
     plt.rcParams["font.family"] = "serif"
     plt.rcParams.update({'font.size': 12})
@@ -276,28 +273,41 @@ def plot_joint(opt = 1):
     plt.figure(figsize=FIGSIZE)
     ridgeline(r2IV, overlap =0, fill = 'y', sep = 10,
         labels = lab, color = c)
-    plt.xlabel('$R^2$_IV')
-    plt.tight_layout()
-    plt.show()
-
-    plt.figure(figsize=FIGSIZE)
-    ridgeline(r2Tg, overlap =0, fill = 'y', sep = 10,
-        labels = lab, color = c)
-    plt.xlabel('$R^2$_Tg')
+    plt.xlabel('$R^2$ IV')
     plt.tight_layout()
     plt.show()
 
     plt.figure(figsize=FIGSIZE)
     ridgeline(maeIV, overlap =0, fill = 'y', sep = 250,
         labels = lab, color = c)
-    plt.xlabel('MAE_IV')
+    plt.xlabel('MAE IV')
+    plt.tight_layout()
+    plt.show()
+
+    # Sort by R2:
+    args = np.argsort([np.mean(r) for r in r2Tg])
+
+    def apply_args(L):
+        return [L[i] for i in args]
+
+    r2IV = apply_args(r2IV)
+    r2Tg = apply_args(r2Tg)
+    maeIV = apply_args(maeIV)
+    maeTg = apply_args(maeTg)
+    lab = apply_args(lab)
+    c = apply_args(c)
+
+    plt.figure(figsize=FIGSIZE)
+    ridgeline(r2Tg, overlap =0, fill = 'y', sep = 10,
+        labels = lab, color = c)
+    plt.xlabel('$R^2$ $T_g$')
     plt.tight_layout()
     plt.show()
 
     plt.figure(figsize=FIGSIZE)
     ridgeline(maeTg, overlap =0, fill = 'y', sep = 0.5,
         labels = lab, color = c)
-    plt.xlabel('MAE_Tg')
+    plt.xlabel('MAE $T_g$')
     plt.tight_layout()
     plt.show()
 
