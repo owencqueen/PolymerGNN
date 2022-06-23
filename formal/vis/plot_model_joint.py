@@ -9,11 +9,42 @@ import sys; sys.path.append('..')
 from summarize_results import get_r2_mae, get_r2_mae_joint
 
 joint_paths = [
+    '../other_joint/OH/saved_scores',
+    '../other_joint/OHP/saved_scores',
     '../other_joint/CM/saved_scores',
     '../other_joint/MBTR/saved_scores',
     '../other_joint/PI/saved_scores',
     '../performance/saved_scores/joint'
 ]
+
+LAB = [
+    # 'Mw',
+    # 'CM',
+    # 'BOB',
+    # #'SOAP',
+    # 'MBTR',
+    'Binary',
+    'Binary\n + Properties',
+    'Joint CM',
+    'Joint MBTR',
+    'Joint PI',
+    'Joint PGNN'
+]
+
+#c = ['red', 'blue', 'green', 'yellow']
+COLORS = [
+    'darkorange', 
+    'm',
+    'teal',
+    'indigo', 
+    'y', 
+    #'mediumblue', 
+    'darkgreen', 
+    # 'darkred',
+    # 'sienna',
+    # 'skyblue',
+    # 'fuchsia'
+    ]
 
 FIGSIZE = (6, 4)
 
@@ -219,34 +250,9 @@ def plot_joint(opt = 1):
         #r2_tg, mae_tg = filter_csv_2(other, comp = 'tg')
         #print(len(r2_tg))
 
-        lab = [
-            # 'Mw',
-            # 'CM',
-            # 'BOB',
-            # #'SOAP',
-            # 'MBTR',
-            # 'Binary',
-            # 'Binary\n + Properties',
-            'Joint CM',
-            'Joint MBTR',
-            'Joint PI',
-            'Joint PGNN'
-        ]
+        lab = LAB
+        c = COLORS
 
-        #c = ['red', 'blue', 'green', 'yellow']
-        c = [
-            'darkorange', 
-            'm',
-            'teal',
-            'indigo', 
-            'y', 
-            #'mediumblue', 
-            'darkgreen', 
-            'darkred',
-            'sienna',
-            'skyblue',
-            'fuchsia'
-            ]
 
     #r2IV = r2_iv + r2IV
     #r2Tg = r2_tg + r2Tg
@@ -254,7 +260,7 @@ def plot_joint(opt = 1):
     #maeTg = mae_tg + maeTg
 
     # Sort by R2:
-    args = np.argsort([np.mean(r) for r in r2IV])
+    args = np.argsort([-np.mean(r) for r in maeIV])
 
     def apply_args(L):
         return [L[i] for i in args]
@@ -273,19 +279,19 @@ def plot_joint(opt = 1):
     plt.figure(figsize=FIGSIZE)
     ridgeline(r2IV, overlap =0, fill = 'y', sep = 10,
         labels = lab, color = c)
-    plt.xlabel('$R^2$ IV')
+    plt.xlabel('$R^2$')
     plt.tight_layout()
     plt.show()
 
     plt.figure(figsize=FIGSIZE)
     ridgeline(maeIV, overlap =0, fill = 'y', sep = 250,
         labels = lab, color = c)
-    plt.xlabel('MAE IV')
+    plt.xlabel('MAE')
     plt.tight_layout()
     plt.show()
 
     # Sort by R2:
-    args = np.argsort([np.mean(r) for r in r2Tg])
+    args = np.argsort([-np.mean(r) for r in maeTg])
 
     def apply_args(L):
         return [L[i] for i in args]
@@ -300,14 +306,15 @@ def plot_joint(opt = 1):
     plt.figure(figsize=FIGSIZE)
     ridgeline(r2Tg, overlap =0, fill = 'y', sep = 10,
         labels = lab, color = c)
-    plt.xlabel('$R^2$ $T_g$')
+    plt.xlabel('$R^2$')
+    plt.xlim(-0.5, 1)
     plt.tight_layout()
     plt.show()
 
     plt.figure(figsize=FIGSIZE)
     ridgeline(maeTg, overlap =0, fill = 'y', sep = 0.5,
         labels = lab, color = c)
-    plt.xlabel('MAE $T_g$')
+    plt.xlabel('MAE')
     plt.tight_layout()
     plt.show()
 

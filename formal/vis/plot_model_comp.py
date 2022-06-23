@@ -21,8 +21,34 @@ tg_paths = [
     # '../model_comparisons/CM/tg',
     # '../model_comparisons/MBTR/tg',
     # '../model_comparisons/SOAP/tg',
-    '../ss_ablation/saved_scores/tg',
+    '../property_ablation/saved_scores/only_mw/tg',
     #'../property_ablation/saved_scores/no_tmp/joint'
+]
+
+OPT2C = [
+    #'darkred', 
+    'm',
+    #'teal',
+    'darkred',
+    'y',
+    'mediumblue',
+    'indigo', 
+    'darkgreen', 
+    (255 / 255, 133 / 255, 0, 1),
+    #'sienna',
+    ]
+
+lab = [
+    #'Properties',
+    'Binary',
+    'Binary\n + Properties',
+    'CM',
+    #'BOB',
+    'PI',
+    'SOAP',
+    'MBTR',
+    'PGNN IV',
+    #'PGNN Joint'
 ]
 
 FIGSIZE = (6, 4)
@@ -147,21 +173,23 @@ def filter_csv_2(df, comp = 'iv'):
 
     # BOB
     BOB_r2, BOB_mae = relevant.iloc[:,8].tolist(), relevant.iloc[:,9].tolist()
-    #10,11
-    #12,13
-    #14,15
 
-    # SOAP - skip PI * 3
-    SOAP_r2, SOAP_mae = relevant.iloc[:,16].tolist(), relevant.iloc[:,17].tolist()
+    #PI 10,11
+    PI_r2, PI_mae = relevant.iloc[:,10].tolist(), relevant.iloc[:,11].tolist()
 
-    # MBTR
-    MBTR_r2, MBTR_mae = relevant.iloc[:,18].tolist(), relevant.iloc[:,19].tolist()
+    # SOAP - 12, 13
+    #SOAP_r2, SOAP_mae = relevant.iloc[:,16].tolist(), relevant.iloc[:,17].tolist()
+    SOAP_r2, SOAP_mae = relevant.iloc[:,12].tolist(), relevant.iloc[:,13].tolist()
+
+    # MBTR - 14, 15
+    #MBTR_r2, MBTR_mae = relevant.iloc[:,18].tolist(), relevant.iloc[:,19].tolist()
+    MBTR_r2, MBTR_mae = relevant.iloc[:,14].tolist(), relevant.iloc[:,15].tolist()
 
     # r2 = [OH_r2, simp_r2, OHS_r2]
     # mae = [OH_mae, simp_mae, OHS_mae]
 
-    r2 = [simp_r2, OH_r2, OHS_r2, CM_r2, BOB_r2, SOAP_r2, MBTR_r2]
-    mae = [simp_mae, OH_mae, OHS_mae, CM_mae, BOB_mae, SOAP_mae, MBTR_mae]
+    r2 = [OH_r2, OHS_r2, CM_r2, PI_r2, SOAP_r2, MBTR_r2]
+    mae = [OH_mae, OHS_mae, CM_mae, PI_mae, SOAP_mae, MBTR_mae]
 
     return r2, mae
     
@@ -206,15 +234,16 @@ def plot_IV(opt = 1):
             'darkred']
 
     elif opt == 2:
-        other = pd.read_csv('05-16_gavin/results_clean.csv')
+        other = pd.read_csv('05-16_gavin/results_clean2.csv')
         r2O, maeO = filter_csv_2(other, comp = 'iv')
 
         lab = [
-            'Mw',
-            'One-Hot',
-            'Ont-Hot\n + Mw',
+            #'Properties',
+            'Binary',
+            'Binary\n + Properties',
             'CM',
-            'BOB',
+            #'BOB',
+            'PI',
             'SOAP',
             'MBTR',
             'PGNN IV',
@@ -222,17 +251,18 @@ def plot_IV(opt = 1):
         ]
 
         #c = ['red', 'blue', 'green', 'yellow']
-        c = [
-            'darkorange', 
-            'm',
-            'teal',
-            'indigo', 
-            'y', 
-            'mediumblue', 
-            'darkgreen', 
-            'darkred',
-            #'sienna',
-            ]
+        c = OPT2C 
+        # c = [
+        #     #'darkred',
+        #     'darkorange', 
+        #     'm',
+        #     'teal',
+        #     'y',
+        #     'mediumblue',
+        #     'indigo', 
+        #     'darkgreen', 
+        #     #'sienna',
+        #     ]
 
     r2 = r2O + r2
     mae = maeO + mae
@@ -278,9 +308,9 @@ def plot_Tg(opt = 1):
         other = pd.read_csv('CV_data2.csv')
         r2O, maeO = filter_csv(other, comp = 'tg')
         lab = [
-            'OH',
+            'Binary',
             'Properties',
-            'OH + \nProperties',
+            'Binary + \nProperties',
             'CM',
             'MBTR',
             'SOAP',
@@ -300,35 +330,37 @@ def plot_Tg(opt = 1):
             'darkred']
 
     elif opt == 2:
-        other = pd.read_csv('05-16_gavin/results_clean.csv')
+        other = pd.read_csv('05-16_gavin/results_clean2.csv')
         r2O, maeO = filter_csv_2(other, comp = 'tg')
         lab = [
-            #'Mw',
-            'One-Hot',
-            'Ont-Hot\n + Mw',
+            #'Properties',
+            'Binary',
+            'Binary\n + Properties',
             'CM',
-            'BOB',
+            #'BOB',
+            'PI',
             'SOAP',
             'MBTR',
             'PGNN $T_g$',
             #'PGNN Joint'
         ]
 
-        c = [
-            #'darkorange', 
-            'm',
-            'teal',
-            'indigo', 
-            'y', 
-            'mediumblue', 
-            'darkgreen', 
-            'darkred',
-            #'black',
-            ]
+        c = OPT2C 
+        # c = [
+        #     #'darkred',
+        #     'darkorange', 
+        #     'm',
+        #     'teal',
+        #     'y',
+        #     'mediumblue',
+        #     'indigo', 
+        #     'darkgreen', 
+        #     #'sienna',
+        #     ]
 
     r2 = r2O + r2
     mae = maeO + mae
-    r2, mae = r2[1:], mae[1:]
+    #r2, mae = r2[1:], mae[1:]
 
     # Sort by R2:
     args = np.argsort([np.mean(r) for r in r2])
@@ -357,6 +389,6 @@ def plot_Tg(opt = 1):
     plt.show()
 
 if __name__ == '__main__':
-    plot_Tg(opt = 2)
+    #plot_Tg(opt = 2)
     plot_IV(opt = 2)
 
