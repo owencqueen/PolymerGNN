@@ -14,7 +14,7 @@ joint_paths = [
     '../other_joint/CM/saved_scores',
     '../other_joint/MBTR/saved_scores',
     '../other_joint/PI/saved_scores',
-    '../performance/saved_scores/joint'
+    '../property_ablation/saved_scores/no_tmp/joint'
 ]
 
 LAB = [
@@ -33,22 +33,27 @@ LAB = [
 
 #c = ['red', 'blue', 'green', 'yellow']
 COLORS = [
-    'darkorange', 
+    'darkgreen',
     'm',
     'teal',
     'indigo', 
     'y', 
-    #'mediumblue', 
-    'darkgreen', 
+    #'mediumblue',  
+    (255 / 255, 133 / 255, 0, 1),
     # 'darkred',
     # 'sienna',
     # 'skyblue',
     # 'fuchsia'
     ]
 
+def print_all_stats(scores, lab):
+
+    for s, l in zip(scores, lab):
+        print('\t {}: {:.4f} +- {:.4f}'.format(l, np.mean(s), np.std(s) / np.sqrt(len(s))))
+
 FIGSIZE = (6, 4)
 
-def ridgeline(data, overlap=0, fill=True, labels=None, n_points=150, sep = 200, color = None):
+def ridgeline(data, overlap=0, fill=True, labels=None, n_points=150, sep = 200, color = None, r2 = False):
     """
     Creates a standard ridgeline plot.
 
@@ -61,8 +66,13 @@ def ridgeline(data, overlap=0, fill=True, labels=None, n_points=150, sep = 200, 
  
     if overlap > 1 or overlap < 0:
         raise ValueError('overlap must be in [0 1]')
-    xx = np.linspace(np.min(np.concatenate(data)),
-                     np.max(np.concatenate(data)), n_points)
+    
+    if r2:
+        xx = np.linspace(-0.2,
+                    1, n_points)
+    else:
+        xx = np.linspace(np.min(np.concatenate(data)),
+                        np.max(np.concatenate(data)), n_points)
     curves = []
     ys = []
     for i, d in enumerate(data):
@@ -77,6 +87,9 @@ def ridgeline(data, overlap=0, fill=True, labels=None, n_points=150, sep = 200, 
         plt.plot(xx, curve+y, c='k', zorder=len(data)-i+1)
     if labels:
         plt.yticks(ys, labels)
+    
+    if r2:
+        plt.xlim(-0.25, 1.05)
 
     return ys
 
@@ -273,22 +286,37 @@ def plot_joint(opt = 1):
     c = apply_args(c)
 
 
+    print('\nTg')
+    print('R2')
+    print_all_stats(r2Tg, lab)
+    print('\nMAE')
+    print_all_stats(maeTg, lab)
+
+    print('\nIV')
+    print('R2')
+    print_all_stats(r2IV, lab)
+    print('\nMAE')
+    print_all_stats(maeIV, lab)
+
+
     plt.rcParams["font.family"] = "serif"
     plt.rcParams.update({'font.size': 12})
 
     plt.figure(figsize=FIGSIZE)
     ridgeline(r2IV, overlap =0, fill = 'y', sep = 10,
-        labels = lab, color = c)
+        labels = lab, color = c, r2 = True)
     plt.xlabel('$R^2$')
     plt.tight_layout()
-    plt.show()
+    #plt.show()
+    plt.savefig('r2_iv.pdf', format = 'pdf')
 
     plt.figure(figsize=FIGSIZE)
     ridgeline(maeIV, overlap =0, fill = 'y', sep = 250,
         labels = lab, color = c)
-    plt.xlabel('MAE')
+    plt.xlabel('MAE (dL/g)')
     plt.tight_layout()
-    plt.show()
+    #plt.show()
+    plt.savefig('mae_iv.pdf', format = 'pdf')
 
     # Sort by R2:
     args = np.argsort([-np.mean(r) for r in maeTg])
@@ -305,18 +333,20 @@ def plot_joint(opt = 1):
 
     plt.figure(figsize=FIGSIZE)
     ridgeline(r2Tg, overlap =0, fill = 'y', sep = 10,
-        labels = lab, color = c)
+        labels = lab, color = c, r2 = True)
     plt.xlabel('$R^2$')
-    plt.xlim(-0.5, 1)
+    #plt.xlim(-0.5, 1)
     plt.tight_layout()
-    plt.show()
+    #plt.show()
+    plt.savefig('r2_tg.pdf', format = 'pdf')
 
     plt.figure(figsize=FIGSIZE)
     ridgeline(maeTg, overlap =0, fill = 'y', sep = 0.5,
         labels = lab, color = c)
-    plt.xlabel('MAE')
+    plt.xlabel('MAE ($^\circ$C)')
     plt.tight_layout()
-    plt.show()
+    #plt.show()
+    plt.savefig('mae_tg.pdf', format = 'pdf')
 
 if __name__ == '__main__':
     plot_joint(opt = 2)

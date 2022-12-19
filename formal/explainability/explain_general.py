@@ -43,6 +43,8 @@ parser.add_argument('--save_path_tmp_experiment', type = str, default = None,
 parser.add_argument('--monomertype', type = str, default = 'G',
     help = 'A (acid) or G (glycol). Used only for TMP rank experiment.')
 parser.add_argument('--mono', action = 'store_true', help ='Use if using Mono variant for IV')
+parser.add_argument('--mw_experiment', action = 'store_true', help ='Run Mw Experiment (partitioning and observing attribution values)')
+parser.add_argument('--debug', action = 'store_true')
 args = parser.parse_args()
 
 # Load dataset:
@@ -82,6 +84,8 @@ model_kwargs = {
 }
 
 exps = []
+ref_inds = []
+count = 0
 for f in tqdm(os.listdir(args.history_loc)):
     # Gather all relevant histories:
     history = pickle.load(open(os.path.join(args.history_loc, f), 'rb'))
@@ -89,6 +93,8 @@ for f in tqdm(os.listdir(args.history_loc)):
     # Make splits of the reference indices:
     kfgen = KFold(n_splits=5, shuffle=False).split(history['all_reference_inds'])
     split_ref_inds = [k[1] for k in kfgen]
+
+    ref_inds.append(history['all_reference_inds'])
 
     # Iterate over the splits, since state dictionaries are separate by kfold splits
     for i in range(len(history['model_state_dicts'])):
@@ -106,6 +112,10 @@ for f in tqdm(os.listdir(args.history_loc)):
         )
 
         exps.append(exp_out)
+    
+    count += 1
+    if args.debug and (count > 1): # Breaks after 2
+        break
 
 if args.tmp_experiment:
     tmp_importance = []
@@ -119,6 +129,39 @@ if args.tmp_experiment:
 
     if args.save_path_tmp_experiment is not None:
         pickle.dump(tmp_importance, open(args.save_path_tmp_experiment, 'wb'))
+
+elif args.mw_experiment:
+
+    mw_vals = []
+    mw_attr = []
+
+    for i in range(len(ref_inds)):
+        # Each ref_inds[i] is a sub-list
+        for j in range(len(ref_inds[i])):
+            mw_attr.append(exps[i][-1]['Mw'][0])
+            mw_vals.append(data.iloc[ref_inds[i][j],:].loc['Mw (PS)'])
+
+    # Partition by mw_vals:
+    mw_inds = np.argsort(mw_vals)
+    upper_quartile = mw_inds[-int(len(mw_inds) / 4):]
+    lower_quartile = mw_inds[:int(len(mw_inds) / 4)]
+
+    upper_attr = [mw_attr[i] for i in upper_quartile]
+    lower_attr = [mw_attr[i] for i in lower_quartile]
+
+    print('Upper Quartile Attr: {:.4f} +- {:.4f}'.format(np.mean(upper_attr), np.std(upper_attr) / np.sqrt(len(upper_attr))))
+    print('Lower Quartile Attr: {:.4f} +- {:.4f}'.format(np.mean(lower_attr), np.std(lower_attr) / np.sqrt(len(lower_attr))))
+
+    plt.rcParams["font.family"] = "serif"
+    fig = plt.gcf()
+    fig.set_size_inches(5, 5)
+
+    #plt.hlines(0, xmin=0, xmax=len(name_list) + 1, colors = 'black', linestyles='dashed')
+    plt.boxplot([lower_attr, upper_attr])
+    plt.ylabel('Attribution')
+    plt.xticks([1, 2], ['Lower Quartile', 'Upper Quartile'])
+    plt.tight_layout()
+    plt.show()
 
 elif args.tmp_rank_experiment:
 

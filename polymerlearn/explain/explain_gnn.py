@@ -117,8 +117,6 @@ dim1_L1norm = lambda t: torch.norm(t, p=1, dim=1)
 class PolymerGNNExplainer:
     '''
     Explainer for the PolymerGNN. Uses Grad CAM with Captum implementation.
-
-    Similar to GXAI-Bench API
     '''
 
     def __init__(self, model: torch.nn.Module, explain_layer = 'fc1',
