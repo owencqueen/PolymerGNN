@@ -1,4 +1,5 @@
 # PolymerGNN
+<img src="https://github.com/owencqueen/PolymerGNN/blob/main/img/whole_arch.jpg" data-canonical-src="https://github.com/owencqueen/PolymerGNN/blob/main/img/whole_arch.jpg" width="700" height="700" />
 Graph neural networks for polymer property prediction.
 
 ## PolymerLearn Package Structure
