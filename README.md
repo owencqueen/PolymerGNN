@@ -57,4 +57,4 @@ To view a general API overview of the package, see the notebooks in the `demo` d
 To modify model architecture, please see the models in the `polymerlearn/models/gnn` directory. This contains models to perform IV, Tg, and joint prediction, including some experimental models with which the team has worked with.
 
 ## Questions?
-If you have any questions, please reach out to Owen (oqueen@vols.utk.edu).
+If you have any questions, please reach out to Owen (owen_queen@hms.harvard.edu).
