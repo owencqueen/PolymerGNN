@@ -58,3 +58,22 @@ To modify model architecture, please see the models in the `polymerlearn/models/
 
 ## Questions?
 If you have any questions, please reach out to Owen (owen_queen@hms.harvard.edu).
+
+## Citation
+
+If you want to cite our code or paper, please use the following BibTex entry:
+```
+@article{queen2023polymer, 
+title={Polymer graph neural networks for multitask property learning}, 
+volume={9}, 
+ISSN={2057-3960}, 
+DOI={10.1038/s41524-023-01034-3}, 
+number={11}, 
+journal={npj Computational Materials}, 
+publisher={Nature Publishing Group}, 
+author={Queen, Owen and McCarver, Gavin A. and Thatigotla, Saitheeraj and Abolins, Brendan P. and Brown, Cameron L. and Maroulas, Vasileios and Vogiatzis, Konstantinos D.}, 
+year={2023}, 
+pages={1–10}, 
+language={en} 
+}
+```
