@@ -1,6 +1,6 @@
 # PolymerGNN
 <img src="https://github.com/owencqueen/PolymerGNN/blob/main/img/whole_arch.jpg" data-canonical-src="https://github.com/owencqueen/PolymerGNN/blob/main/img/whole_arch.jpg" width="700" height="700" />
-Graph neural networks for polymer property prediction.
+Graph neural networks for polymer property prediction. [Paper](https://www.nature.com/articles/s41524-023-01034-3)
 
 ## PolymerLearn Package Structure
 `polymerlearn` is the main component of the repository. This contains all of the driver code for `PolymerGNN`, explainability tools, and utilities for proprocessing data in the format provided.
